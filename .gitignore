@@ -1,0 +1,18 @@
+# Build output
+dexpose
+dexpose.exe
+/dist/
+coverage.out
+
+# Go toolchain
+vendor/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# GoReleaser
+dist/
