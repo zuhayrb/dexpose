@@ -16,3 +16,6 @@ vendor/
 
 # GoReleaser
 dist/
+
+# Personal notes
+memory.md
