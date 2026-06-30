@@ -1,0 +1,171 @@
+# dexpose default pattern set
+# Format: gitleaks-compatible rules.toml
+# Phase 8 will extend this file. Do not remove existing rules without updating
+# the smoke tests in internal/pattern/pattern_test.go.
+
+# ── AWS ──────────────────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "aws-access-key"
+description = "AWS IAM access key ID"
+regex       = '''AKIA[0-9A-Z]{16}'''
+
+[[rules]]
+id          = "aws-secret-access-key"
+description = "AWS IAM secret access key (heuristic: 40-char base64 following common assignment patterns)"
+regex       = '''(?i)aws[_\-\.]?secret[_\-\.]?(?:access[_\-\.]?)?key["']?\s*[=:]\s*["']?([A-Za-z0-9/+=]{40})'''
+
+[[rules]]
+id          = "aws-session-token"
+description = "AWS temporary session token"
+regex       = '''(?i)aws[_\-\.]?session[_\-\.]?token["']?\s*[=:]\s*["']?([A-Za-z0-9/+=]{100,})'''
+
+# ── Stripe ───────────────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "stripe-secret-key"
+description = "Stripe secret API key (live)"
+regex       = '''sk_live_[0-9a-zA-Z]{24,}'''
+
+[[rules]]
+id          = "stripe-restricted-key"
+description = "Stripe restricted API key (live)"
+regex       = '''rk_live_[0-9a-zA-Z]{24,}'''
+
+[[rules]]
+id          = "stripe-publishable-key"
+description = "Stripe publishable key (live) — low severity but confirms Stripe usage"
+regex       = '''pk_live_[0-9a-zA-Z]{24,}'''
+
+[[rules]]
+id          = "stripe-webhook-secret"
+description = "Stripe webhook signing secret"
+regex       = '''whsec_[0-9a-zA-Z]{32,}'''
+
+# ── Slack ─────────────────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "slack-bot-token"
+description = "Slack bot user OAuth token"
+regex       = '''xoxb-[0-9]{10,13}-[0-9]{10,13}-[a-zA-Z0-9]{24}'''
+
+[[rules]]
+id          = "slack-user-token"
+description = "Slack user OAuth token"
+regex       = '''xoxp-[0-9]{10,13}-[0-9]{10,13}-[0-9]{10,13}-[a-zA-Z0-9]{32}'''
+
+[[rules]]
+id          = "slack-app-token"
+description = "Slack app-level token"
+regex       = '''xapp-[0-9]-[A-Z0-9]{10,13}-[0-9]{13}-[a-zA-Z0-9]{64}'''
+
+[[rules]]
+id          = "slack-webhook-url"
+description = "Slack incoming webhook URL"
+regex       = '''https://hooks\.slack\.com/services/T[A-Z0-9]+/B[A-Z0-9]+/[a-zA-Z0-9]+'''
+
+# ── Twilio ───────────────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "twilio-account-sid"
+description = "Twilio account SID"
+regex       = '''AC[a-z0-9]{32}'''
+
+[[rules]]
+id          = "twilio-auth-token"
+description = "Twilio auth token (heuristic: 32-char hex following common assignment)"
+regex       = '''(?i)twilio[_\-\.]?auth[_\-\.]?token["']?\s*[=:]\s*["']?([a-f0-9]{32})'''
+
+# ── SendGrid ─────────────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "sendgrid-api-key"
+description = "SendGrid API key"
+regex       = '''SG\.[0-9A-Za-z\-_]{22}\.[0-9A-Za-z\-_]{43}'''
+
+# ── Mailgun ──────────────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "mailgun-api-key"
+description = "Mailgun private API key"
+regex       = '''key-[0-9a-zA-Z]{32}'''
+
+[[rules]]
+id          = "mailgun-webhook-key"
+description = "Mailgun webhook signing key (same format, different assignment context)"
+regex       = '''(?i)mailgun[_\-\.]?(?:webhook[_\-\.]?)?(?:signing[_\-\.]?)?key["']?\s*[=:]\s*["']?([a-zA-Z0-9\-]{32,})'''
+
+# ── Google ───────────────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "google-api-key"
+description = "Google API key"
+regex       = '''AIza[0-9A-Za-z\-_]{35}'''
+
+[[rules]]
+id          = "google-oauth-client-secret"
+description = "Google OAuth 2.0 client secret"
+regex       = '''GOCSPX-[0-9A-Za-z\-_]{28}'''
+
+[[rules]]
+id          = "google-service-account-key"
+description = "Google service account private key PEM header"
+regex       = '''-----BEGIN (RSA )?PRIVATE KEY-----'''
+
+[[rules]]
+id          = "firebase-server-key"
+description = "Firebase Cloud Messaging server key"
+regex       = '''AAAA[A-Za-z0-9_-]{7}:[A-Za-z0-9_-]{140}'''
+
+# ── GitHub ───────────────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "github-personal-access-token"
+description = "GitHub personal access token (classic)"
+regex       = '''ghp_[0-9a-zA-Z]{36}'''
+
+[[rules]]
+id          = "github-oauth-access-token"
+description = "GitHub OAuth access token"
+regex       = '''gho_[0-9a-zA-Z]{36}'''
+
+[[rules]]
+id          = "github-app-token"
+description = "GitHub App installation or user-to-server token"
+regex       = '''(ghu|ghs)_[0-9a-zA-Z]{36}'''
+
+[[rules]]
+id          = "github-refresh-token"
+description = "GitHub OAuth refresh token"
+regex       = '''ghr_[0-9a-zA-Z]{76}'''
+
+# ── Generic private keys ──────────────────────────────────────────────────────
+
+[[rules]]
+id          = "private-key-pem"
+description = "PEM-encoded private key block"
+regex       = '''-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY(?: BLOCK)?-----'''
+
+# ── Generic high-value assignment patterns ────────────────────────────────────
+# These are intentionally broad; false positive rate is acceptable for the
+# bug bounty / CI use case where over-reporting is preferable to under-reporting.
+
+[[rules]]
+id          = "generic-api-key"
+description = "Generic API key assignment pattern"
+regex       = '''(?i)api[_\-\.]?key["']?\s*[=:]\s*["']([0-9a-zA-Z\-_]{20,})["']'''
+
+[[rules]]
+id          = "generic-secret"
+description = "Generic secret or password assignment pattern"
+regex       = '''(?i)(?:secret|password|passwd|pwd)["']?\s*[=:]\s*["']([^"'\s]{8,})["']'''
+
+[[rules]]
+id          = "generic-token"
+description = "Generic token assignment pattern"
+regex       = '''(?i)(?:auth[_\-]?)?token["']?\s*[=:]\s*["']([0-9a-zA-Z\-_.]{20,})["']'''
+
+[[rules]]
+id          = "bearer-token"
+description = "HTTP Bearer token in a string literal"
+regex       = '''(?i)Bearer\s+([0-9a-zA-Z\-_.]{20,})'''
