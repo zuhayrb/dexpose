@@ -110,4 +110,4 @@ If you find dexpose useful, consider supporting development:
 
 ## License
 
-MIT
+MIT License — see [LICENSE](LICENSE) for details.
