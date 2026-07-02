@@ -12,11 +12,11 @@ Or download a pre-built binary from [Releases](https://github.com/zuhayrb/dexpos
 
 ```bash
 # Linux (amd64)
-curl -sL https://github.com/zuhayrb/dexpose/releases/latest/download/dexpose_v0.1.0_linux_amd64.tar.gz \
+curl -sL https://github.com/zuhayrb/dexpose/releases/latest/download/dexpose_0.1.0_linux_amd64.tar.gz \
   | tar xz
 
 # macOS (arm64)
-curl -sL https://github.com/zuhayrb/dexpose/releases/latest/download/dexpose_v0.1.0_darwin_arm64.tar.gz \
+curl -sL https://github.com/zuhayrb/dexpose/releases/latest/download/dexpose_0.1.0_darwin_arm64.tar.gz \
   | tar xz
 ```
 
@@ -50,7 +50,7 @@ Within each APK, dexpose inspects:
 
 ## Patterns
 
-Ships with a default pattern set covering AWS, Stripe, Slack, Twilio, SendGrid, Mailgun, Google, GitHub, and generic credential patterns. Uses [gitleaks](https://github.com/gitleaks/gitleaks)-compatible `rules.toml` format — drop in your own gitleaks config with `--patterns`.
+Ships with 54 rules covering AWS, Stripe, Slack, Twilio, SendGrid, Mailgun, Google, GitHub, Heroku, DigitalOcean, Azure, Datadog, Terraform Cloud, Shopify, and more. Uses [gitleaks](https://github.com/gitleaks/gitleaks)-compatible `rules.toml` format — drop in your own gitleaks config with `--patterns`.
 
 ## Ignore file
 
