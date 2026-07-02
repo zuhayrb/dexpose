@@ -9,12 +9,16 @@ LDFLAGS := -s -w \
 	-X main.commit=$(COMMIT) \
 	-X main.date=$(DATE)
 
-.PHONY: all build test lint clean release snapshot tidy
+.PHONY: all build test lint clean release snapshot tidy sync
 
 all: build
 
+## sync: copy bundled patterns into the scan package for go:embed
+sync:
+	cp patterns/rules.toml internal/scan/patterns/rules.toml
+
 ## build: compile the binary for the current platform
-build:
+build: sync
 	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o $(BINARY) .
 
 ## test: run all tests with the race detector

@@ -12,7 +12,7 @@ import (
 	"sync/atomic"
 
 	"github.com/BurntSushi/toml"
-	"github.com/zuhayrb/dexpose/internal/scan"
+	"github.com/zuhayrb/dexpose/internal/model"
 )
 
 // Entry is a single suppression rule from an ignore file.
@@ -90,7 +90,7 @@ func Load(data []byte) (*List, error) {
 // suppresses f if any single entry matches — entries combine with OR.
 //
 // Calling Suppressed on a nil *List always returns false.
-func (l *List) Suppressed(f scan.Finding) bool {
+func (l *List) Suppressed(f model.Finding) bool {
 	if l == nil {
 		return false
 	}
@@ -106,7 +106,7 @@ func (l *List) Suppressed(f scan.Finding) bool {
 
 // entryMatches reports whether every field e sets equals the corresponding
 // field on f. Unset fields on e never block a match.
-func entryMatches(e Entry, f scan.Finding) bool {
+func entryMatches(e Entry, f model.Finding) bool {
 	if e.Pattern != "" && e.Pattern != f.Pattern {
 		return false
 	}

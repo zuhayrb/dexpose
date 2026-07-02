@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/zuhayrb/dexpose/internal/ignore"
-	"github.com/zuhayrb/dexpose/internal/scan"
+	"github.com/zuhayrb/dexpose/internal/model"
 )
 
 // --- Load ---
@@ -98,13 +98,13 @@ source = "assets/vendor.bundle.js"
 
 	cases := []struct {
 		name string
-		f    scan.Finding
+		f    model.Finding
 		want bool
 	}{
-		{"pattern dimension", scan.Finding{Pattern: "generic-api-key", Match: "anything", Source: "classes.dex"}, true},
-		{"value dimension", scan.Finding{Pattern: "aws-access-key", Match: "AKIAIOSFODNN7EXAMPLE", Source: "classes.dex"}, true},
-		{"source dimension", scan.Finding{Pattern: "stripe-secret-key", Match: "sk_live_xxx", Source: "assets/vendor.bundle.js"}, true},
-		{"matches none", scan.Finding{Pattern: "stripe-secret-key", Match: "sk_live_xxx", Source: "classes.dex"}, false},
+		{"pattern dimension", model.Finding{Pattern: "generic-api-key", Match: "anything", Source: "classes.dex"}, true},
+		{"value dimension", model.Finding{Pattern: "aws-access-key", Match: "AKIAIOSFODNN7EXAMPLE", Source: "classes.dex"}, true},
+		{"source dimension", model.Finding{Pattern: "stripe-secret-key", Match: "sk_live_xxx", Source: "assets/vendor.bundle.js"}, true},
+		{"matches none", model.Finding{Pattern: "stripe-secret-key", Match: "sk_live_xxx", Source: "classes.dex"}, false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -121,7 +121,7 @@ func TestSuppressed_PatternMatch(t *testing.T) {
 	l, _ := ignore.Load([]byte(`[[ignore]]
 pattern = "generic-api-key"
 `))
-	f := scan.Finding{Pattern: "generic-api-key", Match: "xyz", Source: "classes.dex"}
+	f := model.Finding{Pattern: "generic-api-key", Match: "xyz", Source: "classes.dex"}
 	if !l.Suppressed(f) {
 		t.Error("expected finding to be suppressed by pattern match")
 	}
@@ -131,7 +131,7 @@ func TestSuppressed_PatternNoMatch(t *testing.T) {
 	l, _ := ignore.Load([]byte(`[[ignore]]
 pattern = "generic-api-key"
 `))
-	f := scan.Finding{Pattern: "stripe-secret-key", Match: "xyz", Source: "classes.dex"}
+	f := model.Finding{Pattern: "stripe-secret-key", Match: "xyz", Source: "classes.dex"}
 	if l.Suppressed(f) {
 		t.Error("expected finding not to be suppressed; pattern differs")
 	}
@@ -141,7 +141,7 @@ func TestSuppressed_ValueMatch(t *testing.T) {
 	l, _ := ignore.Load([]byte(`[[ignore]]
 value = "AKIAIOSFODNN7EXAMPLE"
 `))
-	f := scan.Finding{Pattern: "aws-access-key", Match: "AKIAIOSFODNN7EXAMPLE", Source: "classes.dex"}
+	f := model.Finding{Pattern: "aws-access-key", Match: "AKIAIOSFODNN7EXAMPLE", Source: "classes.dex"}
 	if !l.Suppressed(f) {
 		t.Error("expected finding to be suppressed by value match")
 	}
@@ -151,7 +151,7 @@ func TestSuppressed_SourceMatch(t *testing.T) {
 	l, _ := ignore.Load([]byte(`[[ignore]]
 source = "assets/vendor.bundle.js"
 `))
-	f := scan.Finding{Pattern: "generic-api-key", Match: "xyz", Source: "assets/vendor.bundle.js"}
+	f := model.Finding{Pattern: "generic-api-key", Match: "xyz", Source: "assets/vendor.bundle.js"}
 	if !l.Suppressed(f) {
 		t.Error("expected finding to be suppressed by source match")
 	}
@@ -161,7 +161,7 @@ func TestSuppressed_NoEntriesMatch(t *testing.T) {
 	l, _ := ignore.Load([]byte(`[[ignore]]
 pattern = "generic-api-key"
 `))
-	f := scan.Finding{Pattern: "stripe-secret-key", Match: "abc", Source: "classes2.dex"}
+	f := model.Finding{Pattern: "stripe-secret-key", Match: "abc", Source: "classes2.dex"}
 	if l.Suppressed(f) {
 		t.Error("expected finding not to be suppressed")
 	}
@@ -173,7 +173,7 @@ func TestSuppressed_CaseSensitive(t *testing.T) {
 	l, _ := ignore.Load([]byte(`[[ignore]]
 pattern = "generic-api-key"
 `))
-	f := scan.Finding{Pattern: "Generic-API-Key", Match: "xyz", Source: "classes.dex"}
+	f := model.Finding{Pattern: "Generic-API-Key", Match: "xyz", Source: "classes.dex"}
 	if l.Suppressed(f) {
 		t.Error("matching should be case-sensitive; differing case must not suppress")
 	}
@@ -183,7 +183,7 @@ func TestSuppressed_NoSubstringMatching(t *testing.T) {
 	l, _ := ignore.Load([]byte(`[[ignore]]
 source = "vendor.bundle.js"
 `))
-	f := scan.Finding{Pattern: "generic-api-key", Match: "xyz", Source: "assets/vendor.bundle.js"}
+	f := model.Finding{Pattern: "generic-api-key", Match: "xyz", Source: "assets/vendor.bundle.js"}
 	if l.Suppressed(f) {
 		t.Error("matching should require exact equality, not substring containment")
 	}
@@ -196,7 +196,7 @@ func TestSuppressed_MultiFieldEntry_AllFieldsMatch(t *testing.T) {
 pattern = "generic-api-key"
 source  = "assets/vendor.bundle.js"
 `))
-	f := scan.Finding{Pattern: "generic-api-key", Match: "xyz", Source: "assets/vendor.bundle.js"}
+	f := model.Finding{Pattern: "generic-api-key", Match: "xyz", Source: "assets/vendor.bundle.js"}
 	if !l.Suppressed(f) {
 		t.Error("expected suppression when all set fields on the entry match")
 	}
@@ -208,7 +208,7 @@ pattern = "generic-api-key"
 source  = "assets/vendor.bundle.js"
 `))
 	// Pattern matches but source does not — AND semantics require both.
-	f := scan.Finding{Pattern: "generic-api-key", Match: "xyz", Source: "classes.dex"}
+	f := model.Finding{Pattern: "generic-api-key", Match: "xyz", Source: "classes.dex"}
 	if l.Suppressed(f) {
 		t.Error("expected no suppression when only some of the entry's set fields match")
 	}
@@ -220,12 +220,12 @@ pattern = "generic-api-key"
 value   = "xyz"
 source  = "assets/vendor.bundle.js"
 `))
-	match := scan.Finding{Pattern: "generic-api-key", Match: "xyz", Source: "assets/vendor.bundle.js"}
+	match := model.Finding{Pattern: "generic-api-key", Match: "xyz", Source: "assets/vendor.bundle.js"}
 	if !l.Suppressed(match) {
 		t.Error("expected suppression when pattern, value, and source all match")
 	}
 
-	noMatch := scan.Finding{Pattern: "generic-api-key", Match: "different-value", Source: "assets/vendor.bundle.js"}
+	noMatch := model.Finding{Pattern: "generic-api-key", Match: "different-value", Source: "assets/vendor.bundle.js"}
 	if l.Suppressed(noMatch) {
 		t.Error("expected no suppression when value differs from the entry's set value")
 	}
@@ -241,17 +241,17 @@ pattern = "generic-api-key"
 value = "AKIAIOSFODNN7EXAMPLE"
 `))
 
-	byPattern := scan.Finding{Pattern: "generic-api-key", Match: "anything", Source: "classes.dex"}
+	byPattern := model.Finding{Pattern: "generic-api-key", Match: "anything", Source: "classes.dex"}
 	if !l.Suppressed(byPattern) {
 		t.Error("expected suppression via the first entry (pattern)")
 	}
 
-	byValue := scan.Finding{Pattern: "aws-access-key", Match: "AKIAIOSFODNN7EXAMPLE", Source: "classes.dex"}
+	byValue := model.Finding{Pattern: "aws-access-key", Match: "AKIAIOSFODNN7EXAMPLE", Source: "classes.dex"}
 	if !l.Suppressed(byValue) {
 		t.Error("expected suppression via the second entry (value)")
 	}
 
-	neither := scan.Finding{Pattern: "stripe-secret-key", Match: "sk_live_xxx", Source: "classes.dex"}
+	neither := model.Finding{Pattern: "stripe-secret-key", Match: "sk_live_xxx", Source: "classes.dex"}
 	if l.Suppressed(neither) {
 		t.Error("expected no suppression; finding matches neither entry")
 	}
@@ -263,8 +263,8 @@ func TestSuppressedCount_IncrementsOnSuppression(t *testing.T) {
 	l, _ := ignore.Load([]byte(`[[ignore]]
 pattern = "generic-api-key"
 `))
-	suppressed := scan.Finding{Pattern: "generic-api-key", Match: "a", Source: "classes.dex"}
-	notSuppressed := scan.Finding{Pattern: "stripe-secret-key", Match: "b", Source: "classes.dex"}
+	suppressed := model.Finding{Pattern: "generic-api-key", Match: "a", Source: "classes.dex"}
+	notSuppressed := model.Finding{Pattern: "stripe-secret-key", Match: "b", Source: "classes.dex"}
 
 	l.Suppressed(suppressed)
 	l.Suppressed(notSuppressed)
@@ -279,7 +279,7 @@ func TestSuppressedCount_ZeroWhenNothingSuppressed(t *testing.T) {
 	l, _ := ignore.Load([]byte(`[[ignore]]
 pattern = "generic-api-key"
 `))
-	l.Suppressed(scan.Finding{Pattern: "stripe-secret-key", Match: "b", Source: "classes.dex"})
+	l.Suppressed(model.Finding{Pattern: "stripe-secret-key", Match: "b", Source: "classes.dex"})
 
 	if got := l.SuppressedCount(); got != 0 {
 		t.Errorf("SuppressedCount() = %d, want 0", got)
@@ -292,7 +292,7 @@ pattern = "generic-api-key"
 
 func TestSuppressed_NilList(t *testing.T) {
 	var l *ignore.List
-	f := scan.Finding{Pattern: "generic-api-key", Match: "a", Source: "classes.dex"}
+	f := model.Finding{Pattern: "generic-api-key", Match: "a", Source: "classes.dex"}
 	if l.Suppressed(f) {
 		t.Error("a nil *List should never suppress a finding")
 	}
@@ -331,7 +331,7 @@ pattern = "generic-api-key"
 		go func() {
 			defer wg.Done()
 			for j := 0; j < callsEach; j++ {
-				l.Suppressed(scan.Finding{Pattern: "generic-api-key", Match: "x", Source: "classes.dex"})
+				l.Suppressed(model.Finding{Pattern: "generic-api-key", Match: "x", Source: "classes.dex"})
 			}
 		}()
 	}
