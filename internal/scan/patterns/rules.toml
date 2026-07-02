@@ -169,3 +169,158 @@ regex       = '''(?i)(?:auth[_\-]?)?token["']?\s*[=:]\s*["']([0-9a-zA-Z\-_.]{20,
 id          = "bearer-token"
 description = "HTTP Bearer token in a string literal"
 regex       = '''(?i)Bearer\s+([0-9a-zA-Z\-_.]{20,})'''
+
+# ── Heroku ─────────────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "heroku-api-key"
+description = "Heroku API key"
+regex       = '''(?i)heroku[_\-\.]?api[_\-\.]?key["']?\s*[=:]\s*["']([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})["']'''
+
+# ── DigitalOcean ───────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "digitalocean-personal-access-token"
+description = "DigitalOcean personal access token"
+regex       = '''dop_v1_[0-9a-f]{64}'''
+
+[[rules]]
+id          = "digitalocean-oauth-token"
+description = "DigitalOcean OAuth access token"
+regex       = '''doo_v1_[0-9a-f]{64}'''
+
+[[rules]]
+id          = "digitalocean-access-token"
+description = "DigitalOcean legacy access token"
+regex       = '''(?i)digitalocean[_\-\.]?(?:access[_\-\.]?)?token["']?\s*[=:]\s*["']([0-9a-f]{64})["']'''
+
+# ── Datadog ────────────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "datadog-api-key"
+description = "Datadog API key"
+regex       = '''(?i)datadog[_\-\.]?api[_\-\.]?key["']?\s*[=:]\s*["']([0-9a-f]{32})["']'''
+
+[[rules]]
+id          = "datadog-application-key"
+description = "Datadog application key"
+regex       = '''(?i)datadog[_\-\.]?(?:application|app)[\-_\.]?key["']?\s*[=:]\s*["']([0-9a-f]{40})["']'''
+
+# ── New Relic ──────────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "newrelic-api-key"
+description = "New Relic Insights API key"
+regex       = '''NRAK-[A-Z0-9]{27}'''
+
+[[rules]]
+id          = "newrelic-ingest-key"
+description = "New Relic ingest license key"
+regex       = '''(?i)new[_\-]?relic[_\-\.]?(?:license|ingest)[\-_\.]?key["']?\s*[=:]\s*["']([0-9a-f]{32})["']'''
+
+# ── PagerDuty ──────────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "pagerduty-api-key"
+description = "PagerDuty API key"
+regex       = '''(?i)pagerduty[_\-\.]?api[_\-\.]?key["']?\s*[=:]\s*["']([0-9a-zA-Z]{20})["']'''
+
+# ── npm ────────────────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "npm-access-token"
+description = "npm access token"
+regex       = '''npm_[A-Za-z0-9]{36}'''
+
+# ── PyPI ───────────────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "pypi-api-token"
+description = "PyPI API token"
+regex       = '''pypi-[A-Za-z0-9\-_]{100,}'''
+
+# ── Confluent ──────────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "confluent-api-key"
+description = "Confluent Cloud API key"
+regex       = '''(?i)confluent[_\-\.]?api[_\-\.]?key["']?\s*[=:]\s*["']([a-z0-9]{16})["']'''
+
+[[rules]]
+id          = "confluent-api-secret"
+description = "Confluent Cloud API secret"
+regex       = '''(?i)confluent[_\-\.]?api[_\-\.]?(?:secret|password)["']?\s*[=:]\s*["']([A-Za-z0-9+/]{40})["']'''
+
+# ── Doppler ────────────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "doppler-token"
+description = "Doppler service token"
+regex       = '''dp\.st\.[a-z0-9\-_]{40,}'''
+
+[[rules]]
+id          = "doppler-personal-token"
+description = "Doppler personal token"
+regex       = '''dp\.pt\.[a-z0-9\-_]{40,}'''
+
+# ── Terraform Cloud ────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "terraform-cloud-token"
+description = "Terraform Cloud / Enterprise API token"
+regex       = '''(?i)atlasv1\.[A-Za-z0-9\-_]{14,}'''
+
+# ── HashiCorp Vault ────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "vault-token"
+description = "HashiCorp Vault service token"
+regex       = '''(?i)vault[_\-\.]?token["']?\s*[=:]\s*["']?hvs\.[A-Za-z0-9\-_]{24,}'''
+
+[[rules]]
+id          = "vault-batch-token"
+description = "HashiCorp Vault batch token"
+regex       = '''(?i)vault[_\-\.]?token["']?\s*[=:]\s*["']?hvb\.[A-Za-z0-9\-_]{24,}'''
+
+# ── Azure ──────────────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "azure-storage-account-key"
+description = "Azure Storage account key"
+regex       = '''(?i)(?:account[_\-\.]?key|storage[_\-\.]?key)["']?\s*[=:]\s*["']?([A-Za-z0-9+/]{86}==)'''
+
+[[rules]]
+id          = "azure-client-secret"
+description = "Azure AD client secret"
+regex       = '''(?i)(?:client[_\-\.]?secret|azure[_\-\.]?secret)["']?\s*[=:]\s*["']([A-Za-z0-9\-_.~+/]{34,})["']'''
+
+# ── Shopify ────────────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "shopify-access-token"
+description = "Shopify Admin API access token (shpat_ / shpca_ / shppa_ / shpbs_ / shpss_)"
+regex       = '''shp(at|ca|pa|bs|ss)_[a-fA-F0-9]{32,}'''
+
+[[rules]]
+id          = "shopify-shared-secret"
+description = "Shopify API shared secret"
+regex       = '''(?i)shopify[_\-\.]?(?:api[_\-\.]?)?shared[_\-\.]?secret["']?\s*[=:]\s*["']([a-f0-9]{32})["']'''
+
+# ── Twitch ─────────────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "twitch-client-secret"
+description = "Twitch API client secret"
+regex       = '''(?i)twitch[_\-\.]?(?:api[_\-\.]?)?client[_\-\.]?secret["']?\s*[=:]\s*["']([0-9a-zA-Z]{30})["']'''
+
+# ── Database connection strings ─────────────────────────────────────────────
+
+[[rules]]
+id          = "connection-string-password"
+description = "Database or service connection string with embedded password"
+regex       = '''(?i)(?:mysql|postgres(?:ql)?|mongodb(?:\+srv)?|redis|amqp|mssql)://[^:\s]+:([^@\s]{8,})@[^\s]+'''
+
+[[rules]]
+id          = "database-url-password"
+description = "DATABASE_URL or similar with embedded password"
+regex       = '''(?i)database[_\-\.]?url["']?\s*[=:]\s*["']?[a-z]+://[^:\s]+:([^@\s]{8,})@[^\s]+'''

@@ -8,7 +8,17 @@ A pure-Go CLI tool that scans APK files for leaked secrets and sensitive strings
 go install github.com/zuhayrb/dexpose@latest
 ```
 
-Or grab a pre-built binary from [Releases](https://github.com/zuhayrb/dexpose/releases).
+Or download a pre-built binary from [Releases](https://github.com/zuhayrb/dexpose/releases):
+
+```bash
+# Linux (amd64)
+curl -sL https://github.com/zuhayrb/dexpose/releases/latest/download/dexpose_v0.1.0_linux_amd64.tar.gz \
+  | tar xz
+
+# macOS (arm64)
+curl -sL https://github.com/zuhayrb/dexpose/releases/latest/download/dexpose_v0.1.0_darwin_arm64.tar.gz \
+  | tar xz
+```
 
 ## Usage
 
@@ -24,6 +34,9 @@ dexpose -p my-rules.toml -i .dexposeIgnore target.apk
 
 # Show match context and scan progress
 dexpose --context --verbose target.apk
+
+# Print version
+dexpose --version
 ```
 
 ## What it scans
@@ -65,10 +78,21 @@ source = "assets/vendor.bundle.js"
 ## Development
 
 ```bash
-make build     # compile
+make build     # sync patterns + compile
 make test      # run tests with race detector
 make lint      # go vet + staticcheck
 make tidy      # go mod tidy + verify
+make snapshot  # local GoReleaser dry run
+make sync      # copy patterns for go:embed
+```
+
+## Security
+
+Verify downloaded binaries against the SHA-256 checksums published with each release:
+
+```bash
+sha256sum dexpose
+cat checksums.txt
 ```
 
 ## License

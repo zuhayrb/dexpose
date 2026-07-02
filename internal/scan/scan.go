@@ -175,8 +175,11 @@ func collectAPKPaths(path string) ([]string, error) {
 }
 
 // scanAPKPool scans multiple APKs concurrently using a worker pool.
+// Per-APK errors are non-fatal: the bad APK is skipped with a warning and
+// scanning continues for the remaining APKs.
 func scanAPKPool(apkPaths []string, matcher *pattern.Matcher, cfg Config) ([]model.Finding, error) {
 	type result struct {
+		apkPath  string
 		findings []model.Finding
 		err      error
 	}
@@ -196,7 +199,7 @@ func scanAPKPool(apkPaths []string, matcher *pattern.Matcher, cfg Config) ([]mod
 			defer wg.Done()
 			for path := range jobs {
 				findings, err := scanAPK(path, matcher, cfg)
-				results <- result{findings, err}
+				results <- result{path, findings, err}
 			}
 		}()
 	}
@@ -213,15 +216,16 @@ func scanAPKPool(apkPaths []string, matcher *pattern.Matcher, cfg Config) ([]mod
 	}()
 
 	var all []model.Finding
-	var firstErr error
 	for r := range results {
-		if r.err != nil && firstErr == nil {
-			firstErr = r.err
+		if r.err != nil {
+			// Per-APK error: warn and continue.
+			fmt.Fprintf(os.Stderr, "dexpose: warning: cannot scan %s: %v\n", r.apkPath, r.err)
+			continue
 		}
 		all = append(all, r.findings...)
 	}
 
-	return all, firstErr
+	return all, nil
 }
 
 // scanAPK scans a single APK and returns all findings.

@@ -273,14 +273,107 @@ func TestMatch_RealWorldPatterns(t *testing.T) {
 			input:     "MAILGUN_KEY=\x6bey-abcdefghijklmnopqrstuvwxyz123456",
 			wantMatch: true,
 		},
+		// --- Phase 8 new rules ---
+		{
+			name:      "DigitalOcean personal access token",
+			ruleID:    "digitalocean-personal-access-token",
+			regex:     `dop_v1_[0-9a-f]{64}`,
+			input:     "token=dop_v1_" + strings.Repeat("a", 64),
+			wantMatch: true,
+		},
+		{
+			name:      "New Relic API key",
+			ruleID:    "newrelic-api-key",
+			regex:     `NRAK-[A-Z0-9]{27}`,
+			input:     "NEW_RELIC_KEY=NRAK-ABCDEFGHIJKLMNOPQRSTUVWXYZ012345",
+			wantMatch: true,
+		},
+		{
+			name:      "npm access token",
+			ruleID:    "npm-access-token",
+			regex:     `npm_[A-Za-z0-9]{36}`,
+			input:     "NPM_TOKEN=npm_aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789",
+			wantMatch: true,
+		},
+		{
+			name:      "PyPI API token",
+			ruleID:    "pypi-api-token",
+			regex:     `pypi-[A-Za-z0-9\-_]{100,}`,
+			input:     "PYPI_TOKEN=" + "pypi-" + strings.Repeat("A", 100),
+			wantMatch: true,
+		},
+		{
+			name:      "Doppler service token",
+			ruleID:    "doppler-token",
+			regex:     `dp\.st\.[a-z0-9\-_]{40,}`,
+			input:     "DOPPLER_TOKEN=dp.st." + strings.Repeat("a", 40),
+			wantMatch: true,
+		},
+		{
+			name:      "Doppler personal token",
+			ruleID:    "doppler-personal-token",
+			regex:     `dp\.pt\.[a-z0-9\-_]{40,}`,
+			input:     "DOPPLER_TOKEN=dp.pt." + strings.Repeat("b", 40),
+			wantMatch: true,
+		},
+		{
+			name:      "Terraform Cloud token",
+			ruleID:    "terraform-cloud-token",
+			regex:     `(?i)atlasv1\.[A-Za-z0-9\-_]{14,}`,
+			input:     "TF_TOKEN=atlasv1.abcdefghijklmnop",
+			wantMatch: true,
+		},
+		{
+			name:      "Vault service token",
+			ruleID:    "vault-token",
+			regex:     `(?i)vault[_\-\.]?token["']?\s*[=:]\s*["']?hvs\.[A-Za-z0-9\-_]{24,}`,
+			input:     `VAULT_TOKEN="hvs.` + strings.Repeat("A", 24) + `"`,
+			wantMatch: true,
+		},
+		{
+			name:      "Azure storage account key",
+			ruleID:    "azure-storage-account-key",
+			regex:     `(?i)(?:account[_\-\.]?key|storage[_\-\.]?key)["']?\s*[=:]\s*["']?([A-Za-z0-9+/]{86}==)`,
+			input:     "AccountKey=" + strings.Repeat("A", 86) + "==",
+			wantMatch: true,
+		},
+		{
+			name:      "Shopify access token",
+			ruleID:    "shopify-access-token",
+			regex:     `shp(at|ca|pa|bs|ss)_[a-fA-F0-9]{32,}`,
+			input:     "SHOPIFY_TOKEN=shpat_" + strings.Repeat("a", 32),
+			wantMatch: true,
+		},
+		{
+			name:      "Connection string password",
+			ruleID:    "connection-string-password",
+			regex:     `(?i)(?:mysql|postgres(?:ql)?|mongodb(?:\+srv)?|redis|amqp|mssql)://[^:\s]+:([^@\s]{8,})@[^\s]+`,
+			input:     "postgres\x3a//user:supersecret123@db.example.com/mydb",
+			wantMatch: true,
+		},
+		{
+			name:      "DATABASE_URL password",
+			ruleID:    "database-url-password",
+			regex:     `(?i)database[_\-\.]?url["']?\s*[=:]\s*["']?[a-z]+://[^:\s]+:([^@\s]{8,})@[^\s]+`,
+			input:     "DATABASE_URL=postgres\x3a//admin:hunter2pass@localhost:5432/app",
+			wantMatch: true,
+		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			// Use TOML literal strings (single-quoted) for both id and regex
-			// so that backslashes in regex patterns are passed through verbatim
-			// rather than being interpreted as TOML escape sequences.
-			tomlSrc := "[[rules]]\nid    = '" + tc.ruleID + "'\nregex = '" + tc.regex + "'\n"
+			// Build TOML so that backslashes in regex pass through verbatim.
+			// Use literal (''') strings when the regex has no single quotes,
+			// and double-quoted strings (with escaped backslashes) when it does.
+			var tomlSrc string
+			if strings.Contains(tc.regex, "'") {
+				// Double-quoted TOML string: escape backslashes and double quotes.
+				escaped := strings.ReplaceAll(tc.regex, `\`, `\\`)
+				escaped = strings.ReplaceAll(escaped, `"`, `\"`)
+				tomlSrc = "[[rules]]\nid    = '" + tc.ruleID + "'\nregex = \"" + escaped + "\"\n"
+			} else {
+				tomlSrc = "[[rules]]\nid    = '" + tc.ruleID + "'\nregex = '" + tc.regex + "'\n"
+			}
 			m, err := pattern.Load([]byte(tomlSrc))
 			if err != nil {
 				t.Fatalf("Load: %v", err)
