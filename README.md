@@ -1,5 +1,10 @@
 # dexpose
 
+![Go Version](https://img.shields.io/badge/go-1.26%2B-blue)
+![Release](https://img.shields.io/github/v/release/zuhayrb/dexpose)
+![Build](https://github.com/zuhayrb/dexpose/actions/workflows/ci.yml/badge.svg)
+![License](https://img.shields.io/github/license/zuhayrb/dexpose)
+
 A pure-Go CLI tool that scans APK files for leaked secrets and sensitive strings. No JVM, no jadx, no runtime dependencies — just a single static binary.
 
 ## Install
@@ -94,6 +99,14 @@ Verify downloaded binaries against the SHA-256 checksums published with each rel
 sha256sum dexpose
 cat checksums.txt
 ```
+
+## Support ☕
+
+If you find dexpose useful, consider supporting development:
+
+- **BTC**: `bc1qarlskqtdq4wsdudecktv6g7zqv5jv52at9k5uk`
+- **ETH/ERC-20**: `0x03d42691a1f0d9af62899813e1f3937da0f6039b`
+- **SOL/SLP**: `J9jneBCAW8NaoSj5KekxLyxBcYbzNq3F2Wshdar7FHdf`
 
 ## License
 
