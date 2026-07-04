@@ -179,8 +179,9 @@ regex = "BBB"
 	}
 }
 
-func TestMatch_OnlyFirstOccurrencePerRule(t *testing.T) {
-	// A string with two matches for the same rule should yield one Match entry.
+func TestMatch_AllOccurrencesPerRuleDeduped(t *testing.T) {
+	// A string with two distinct matches for the same rule should yield two
+	// Match entries (FindAllString with dedup).
 	src := `
 [[rules]]
 id    = "repeated"
@@ -189,11 +190,16 @@ regex = "TOKEN_[A-Z]+"
 	m, _ := pattern.Load([]byte(src))
 
 	got := m.Match("TOKEN_ALPHA and TOKEN_BETA")
-	if len(got) != 1 {
-		t.Errorf("Match: want 1 result per rule (first hit only), got %d", len(got))
+	if len(got) != 2 {
+		t.Fatalf("Match: want 2 results (all unique matches), got %d: %+v", len(got), got)
 	}
-	if got[0].Value != "TOKEN_ALPHA" {
-		t.Errorf("Value = %q, want first match TOKEN_ALPHA", got[0].Value)
+	// Both values should be returned.
+	vals := map[string]bool{}
+	for _, g := range got {
+		vals[g.Value] = true
+	}
+	if !vals["TOKEN_ALPHA"] || !vals["TOKEN_BETA"] {
+		t.Errorf("expected both TOKEN_ALPHA and TOKEN_BETA; got values: %v", vals)
 	}
 }
 
@@ -356,6 +362,42 @@ func TestMatch_RealWorldPatterns(t *testing.T) {
 			ruleID:    "database-url-password",
 			regex:     `(?i)database[_\-\.]?url["']?\s*[=:]\s*["']?[a-z]+://[^:\s]+:([^@\s]{8,})@[^\s]+`,
 			input:     "DATABASE_URL=postgres\x3a//admin:hunter2pass@localhost:5432/app",
+			wantMatch: true,
+		},
+		// --- New patterns for APK context ---
+		{
+			name:      "Google OAuth client ID",
+			ruleID:    "google-oauth-client-id",
+			regex:     `[0-9]{10,}-[a-zA-Z0-9_]+\.apps\.googleusercontent\.com`,
+			input:     "client_id=1039583071963-hopic0upn374f5t24998g8b412ntb56l.apps.googleusercontent.com",
+			wantMatch: true,
+		},
+		{
+			name:      "Firebase URL",
+			ruleID:    "firebase-url",
+			regex:     `[a-zA-Z0-9_-]+\.firebaseio\.com`,
+			input:     "db_url=https://andromeda-88668.firebaseio.com",
+			wantMatch: true,
+		},
+		{
+			name:      "JWT token",
+			ruleID:    "jwt-token",
+			regex:     `eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+`,
+			input:     "token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U",
+			wantMatch: true,
+		},
+		{
+			name:      "High-entropy hex string",
+			ruleID:    "high-entropy-hex",
+			regex:     `[0-9a-fA-F]{32,64}`,
+			input:     "hash=2438bce1ddb7bd026d5ff89f598b3b5e",
+			wantMatch: true,
+		},
+		{
+			name:      "High-entropy base64 string",
+			ruleID:    "high-entropy-base64",
+			regex:     `[A-Za-z0-9+/]{40,}={0,2}`,
+			input:     "key=" + strings.Repeat("A", 40),
 			wantMatch: true,
 		},
 	}

@@ -109,8 +109,8 @@ regex       = '''GOCSPX-[0-9A-Za-z\-_]{28}'''
 
 [[rules]]
 id          = "google-service-account-key"
-description = "Google service account private key PEM header"
-regex       = '''-----BEGIN (RSA )?PRIVATE KEY-----'''
+description = "Google service account private key PEM block"
+regex       = '''-----BEGIN (RSA )?PRIVATE KEY-----[A-Za-z0-9+/=\n]+-----END (RSA )?PRIVATE KEY-----'''
 
 [[rules]]
 id          = "firebase-server-key"
@@ -144,7 +144,7 @@ regex       = '''ghr_[0-9a-zA-Z]{76}'''
 [[rules]]
 id          = "private-key-pem"
 description = "PEM-encoded private key block"
-regex       = '''-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY(?: BLOCK)?-----'''
+regex       = '''-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY(?: BLOCK)?-----[A-Za-z0-9+/=\n]+-----END (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY(?: BLOCK)?-----'''
 
 # ── Generic high-value assignment patterns ────────────────────────────────────
 # These are intentionally broad; false positive rate is acceptable for the
@@ -324,3 +324,38 @@ regex       = '''(?i)(?:mysql|postgres(?:ql)?|mongodb(?:\+srv)?|redis|amqp|mssql
 id          = "database-url-password"
 description = "DATABASE_URL or similar with embedded password"
 regex       = '''(?i)database[_\-\.]?url["']?\s*[=:]\s*["']?[a-z]+://[^:\s]+:([^@\s]{8,})@[^\s]+'''
+
+# ── Google OAuth client IDs ────────────────────────────────────────────────
+
+[[rules]]
+id          = "google-oauth-client-id"
+description = "Google OAuth 2.0 client ID (Android web client)"
+regex       = '''[0-9]{10,}-[a-zA-Z0-9_]+\.apps\.googleusercontent\.com'''
+
+# ── Firebase ──────────────────────────────────────────────────────────────
+
+[[rules]]
+id          = "firebase-url"
+description = "Firebase Realtime Database URL"
+regex       = '''[a-zA-Z0-9_-]+\.firebaseio\.com'''
+
+# ── JSON Web Tokens ──────────────────────────────────────────────────────
+
+[[rules]]
+id          = "jwt-token"
+description = "JSON Web Token (JWT)"
+regex       = '''eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+'''
+
+# ── High-entropy hex strings (potential API keys, tokens, secrets) ────────
+
+[[rules]]
+id          = "high-entropy-hex"
+description = "High-entropy hex string (likely API key or token)"
+regex       = '''[0-9a-fA-F]{32,64}'''
+
+# ── High-entropy base64 strings ──────────────────────────────────────────
+
+[[rules]]
+id          = "high-entropy-base64"
+description = "High-entropy base64 string (likely API key or token)"
+regex       = '''[A-Za-z0-9+/]{40,}={0,2}'''

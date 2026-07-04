@@ -90,17 +90,22 @@ func Load(data []byte) (*Matcher, error) {
 	return &Matcher{rules: compiled}, nil
 }
 
-// Match runs every compiled rule against s and returns one Match per rule that
-// fires. If no rules match, Match returns nil.
+// Match runs every compiled rule against s and returns one Match per unique
+// value found per rule. If no rules match, Match returns nil.
 //
-// Each rule is evaluated with FindString, so only the first match per rule per
-// string is returned. Secrets scanning cares about presence, not exhaustive
-// enumeration of repeated occurrences within a single string.
+// Each rule is evaluated with FindAllString, so multiple distinct matches
+// within a single string are returned. Duplicate match values are deduplicated
+// to avoid redundant findings from the same string.
 func (m *Matcher) Match(s string) []Match {
 	var matches []Match
 	for _, cr := range m.rules {
-		hit := cr.re.FindString(s)
-		if hit != "" {
+		hits := cr.re.FindAllString(s, -1)
+		seen := make(map[string]bool, len(hits))
+		for _, hit := range hits {
+			if seen[hit] {
+				continue
+			}
+			seen[hit] = true
 			matches = append(matches, Match{
 				RuleID: cr.rule.ID,
 				Value:  hit,

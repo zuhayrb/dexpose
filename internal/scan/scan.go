@@ -255,7 +255,21 @@ func scanAPK(apkPath string, matcher *pattern.Matcher, cfg Config) ([]model.Find
 			if i == 0 {
 				sourceName = "classes.dex"
 			}
-			findings = append(findings, scanContent(apkPath, sourceName, string(dex), matcher, cfg)...)
+			dexStrings, err := apk.ExtractStrings(dex)
+			if err != nil {
+				// Fallback: scan raw binary if DEX extraction fails.
+				if cfg.Verbose {
+					fmt.Fprintf(os.Stderr, "dexpose: warning: %s: cannot extract DEX strings (%v), scanning raw binary\n", sourceName, err)
+				}
+				findings = append(findings, scanContent(apkPath, sourceName, string(dex), matcher, cfg)...)
+				continue
+			}
+			if cfg.Verbose {
+				fmt.Fprintf(os.Stderr, "dexpose: %s: %d strings extracted\n", sourceName, len(dexStrings))
+			}
+			for _, s := range dexStrings {
+				findings = append(findings, scanContent(apkPath, sourceName, s, matcher, cfg)...)
+			}
 		}
 	}
 
@@ -300,7 +314,8 @@ func scanAPK(apkPath string, matcher *pattern.Matcher, cfg Config) ([]model.Find
 
 // scanContent runs all pattern rules against a content string and returns
 // findings for every match. When --context is set, each finding includes
-// surrounding characters from the source.
+// surrounding characters from the source. When --verbose is set, each
+// finding is printed to stderr as it is discovered.
 func scanContent(apkPath, sourceName, content string, matcher *pattern.Matcher, cfg Config) []model.Finding {
 	matches := matcher.Match(content)
 	if len(matches) == 0 {
@@ -317,6 +332,13 @@ func scanContent(apkPath, sourceName, content string, matcher *pattern.Matcher, 
 		}
 		if cfg.Context {
 			f.Context = extractContext(content, m.Value)
+		}
+		if cfg.Verbose {
+			matchPreview := m.Value
+			if len(matchPreview) > 80 {
+				matchPreview = matchPreview[:80] + "..."
+			}
+			fmt.Fprintf(os.Stderr, "dexpose: found %s in %s: %s\n", m.RuleID, sourceName, matchPreview)
 		}
 		findings = append(findings, f)
 	}
