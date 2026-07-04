@@ -386,20 +386,6 @@ func TestMatch_RealWorldPatterns(t *testing.T) {
 			input:     "token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U",
 			wantMatch: true,
 		},
-		{
-			name:      "High-entropy hex string",
-			ruleID:    "high-entropy-hex",
-			regex:     `[0-9a-fA-F]{32,64}`,
-			input:     "hash=2438bce1ddb7bd026d5ff89f598b3b5e",
-			wantMatch: true,
-		},
-		{
-			name:      "High-entropy base64 string",
-			ruleID:    "high-entropy-base64",
-			regex:     `[A-Za-z0-9+/]{40,}={0,2}`,
-			input:     "key=" + strings.Repeat("A", 40),
-			wantMatch: true,
-		},
 	}
 
 	for _, tc := range cases {

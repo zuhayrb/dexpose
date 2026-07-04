@@ -346,16 +346,3 @@ id          = "jwt-token"
 description = "JSON Web Token (JWT)"
 regex       = '''eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+'''
 
-# ── High-entropy hex strings (potential API keys, tokens, secrets) ────────
-
-[[rules]]
-id          = "high-entropy-hex"
-description = "High-entropy hex string (likely API key or token)"
-regex       = '''[0-9a-fA-F]{32,64}'''
-
-# ── High-entropy base64 strings ──────────────────────────────────────────
-
-[[rules]]
-id          = "high-entropy-base64"
-description = "High-entropy base64 string (likely API key or token)"
-regex       = '''[A-Za-z0-9+/]{40,}={0,2}'''

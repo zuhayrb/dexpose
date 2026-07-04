@@ -55,7 +55,7 @@ Within each APK, dexpose inspects:
 
 ## Patterns
 
-Ships with 59 rules covering AWS, Stripe, Slack, Twilio, SendGrid, Mailgun, Google, GitHub, Heroku, DigitalOcean, Azure, Datadog, Terraform Cloud, Shopify, Firebase, JWT tokens, high-entropy hex/base64 strings, and more. Uses [gitleaks](https://github.com/gitleaks/gitleaks)-compatible `rules.toml` format — drop in your own gitleaks config with `--patterns`.
+Ships with 57 rules covering AWS, Stripe, Slack, Twilio, SendGrid, Mailgun, Google, GitHub, Heroku, DigitalOcean, Azure, Datadog, Terraform Cloud, Shopify, Firebase, JWT tokens, and more. Uses [gitleaks](https://github.com/gitleaks/gitleaks)-compatible `rules.toml` format — drop in your own gitleaks config with `--patterns`.
 
 ## Ignore file
 
