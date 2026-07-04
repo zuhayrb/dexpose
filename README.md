@@ -34,15 +34,85 @@ dexpose target.apk
 # Scan a directory of APKs, output as JSON
 dexpose -f json -o results.json ./apks/
 
+# Show match context and real-time scan details
+dexpose --context --verbose target.apk
+
 # Custom patterns + ignore file
 dexpose -p my-rules.toml -i .dexposeIgnore target.apk
-
-# Show match context and scan progress with real-time findings
-dexpose --context --verbose target.apk
 
 # Print version
 dexpose --version
 ```
+
+### Output formats
+
+**Plain** (default) — tab-separated lines:
+
+```
+target.apk  classes.dex              aws-access-key    AKIAIOSFODNN7EXAMPLE
+target.apk  AndroidManifest.xml      google-api-key    AIzaSyBlL7MI-FuPJ3EueRrfB2ClDXFwkwoQrSg
+target.apk  assets/config.json       jwt-token         eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U
+```
+
+**JSON** — structured array, pipeable into jq:
+
+```bash
+dexpose -f json target.apk | jq '.[].pattern'
+```
+
+```json
+[
+  { "apk": "target.apk", "source": "classes.dex", "pattern": "aws-access-key", "match": "AKIAIOSFODNN7EXAMPLE" },
+  { "apk": "target.apk", "source": "AndroidManifest.xml", "pattern": "google-api-key", "match": "AIzaSyBlL7MI-FuPJ3EueRrfB2ClDXFwkwoQrSg" }
+]
+```
+
+### CI usage
+
+Exit code 1 when findings exist, 0 when clean:
+
+```bash
+dexpose -f json -o results.json ./release.apk && echo "clean" || echo "secrets found"
+```
+
+### Verbose mode
+
+With `--verbose`, dexpose prints the logo, version, rule count, scan progress, DEX string counts, and each finding in real-time to stderr:
+
+```
+████████╗ ██████╗ ██████╗
+╚══██╔══╝██╔═══██╗██╔══██╗
+   ██║   ██║   ██║██████╔╝
+   ██║   ██║   ██║██╔══██╗
+   ██║   ╚██████╔╝██║  ██║
+   ╚═╝    ╚═════╝ ╚═╝  ╚═╝
+
+ dexpose v0.1.2 — 57 rules loaded
+
+dexpose: scanning target.apk
+dexpose: classes.dex: 14203 strings extracted
+dexpose: found AKIAIOSFODNN7EXAMPLE in classes.dex [aws-access-key]
+dexpose: found AIzaSyBlL7MI-FuPJ3EueRrfB2ClDXFwkwoQrSg in AndroidManifest.xml [google-api-key]
+dexpose: target.apk: 2 finding(s)
+dexpose: scanned 1 APK(s), 2 finding(s)
+```
+
+### Ignoring false positives
+
+Create a `.dexposeIgnore` file:
+
+```toml
+[[ignore]]
+pattern = "generic-api-key"
+
+[[ignore]]
+value = "AKIAIOSFODNN7EXAMPLE"
+
+[[ignore]]
+source = "assets/vendor.bundle.js"
+```
+
+Suppressed findings are excluded from both output and exit code.
 
 ## What it scans
 
@@ -56,21 +126,6 @@ Within each APK, dexpose inspects:
 ## Patterns
 
 Ships with 57 rules covering AWS, Stripe, Slack, Twilio, SendGrid, Mailgun, Google, GitHub, Heroku, DigitalOcean, Azure, Datadog, Terraform Cloud, Shopify, Firebase, JWT tokens, and more. Uses [gitleaks](https://github.com/gitleaks/gitleaks)-compatible `rules.toml` format — drop in your own gitleaks config with `--patterns`.
-
-## Ignore file
-
-Suppress specific findings from output and exit code:
-
-```toml
-[[ignore]]
-pattern = "generic-api-key"
-
-[[ignore]]
-value = "AKIAIOSFODNN7EXAMPLE"
-
-[[ignore]]
-source = "assets/vendor.bundle.js"
-```
 
 ## Exit codes
 

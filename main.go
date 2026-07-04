@@ -94,6 +94,7 @@ func run() int {
 		IgnoreFile:   *ignoreFile,
 		Context:      *context,
 		Verbose:      *verbose,
+		Version:      version,
 	}
 
 	code := scan.Run(cfg)

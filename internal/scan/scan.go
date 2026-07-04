@@ -42,6 +42,7 @@ type Config struct {
 	// Behaviour
 	Context bool // include surrounding characters in findings
 	Verbose bool // print progress and per-file metadata
+	Version string // build version, injected at compile time
 }
 
 // Run executes a full scan according to cfg and writes output via cfg.OutputDest.
@@ -56,6 +57,10 @@ func Run(cfg Config) int {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "dexpose: %v\n", err)
 		return 2
+	}
+
+	if cfg.Verbose {
+		printBanner(cfg.Version, matcher.RuleCount())
 	}
 
 	// Load ignore file.
@@ -368,4 +373,20 @@ func extractContext(content, value string) string {
 	}
 
 	return content[start:end]
+}
+
+// asciiBanner is the dexpose logo printed when --verbose is set.
+const asciiBanner = `
+████████╗ ██████╗ ██████╗
+╚══██╔══╝██╔═══██╗██╔══██╗
+   ██║   ██║   ██║██████╔╝
+   ██║   ██║   ██║██╔══██╗
+   ██║   ╚██████╔╝██║  ██║
+   ╚═╝    ╚═════╝ ╚═╝  ╚═╝
+`
+
+// printBanner prints the dexpose logo, version, and rule count to stderr.
+func printBanner(version string, ruleCount int) {
+	fmt.Fprint(os.Stderr, asciiBanner)
+	fmt.Fprintf(os.Stderr, " dexpose %s — %d rules loaded\n\n", version, ruleCount)
 }
