@@ -59,8 +59,21 @@ dexpose --context --verbose target.apk
 dexpose -p my-rules.toml -i .dexposeIgnore target.apk
 
 # Print version
-dexpose --version
+dexpose -v
 ```
+
+### Flags
+
+| Flag | Shorthand | Description |
+|------|-----------|-------------|
+| `--format` | `-f` | Output format: `plain` (default) or `json` |
+| `--output` | `-o` | Write results to file instead of stdout |
+| `--patterns` | `-p` | Path to custom rules.toml |
+| `--ignore` | `-i` | Path to ignore file |
+| `--context` | `-c` | Include surrounding characters around each match |
+| `--verbose` | | Print scan progress and per-file metadata |
+| `--quiet` | `-q` | Suppress non-fatal stderr output |
+| `--version` | `-v` | Print version information and exit |
 
 ### Output formats
 

@@ -42,6 +42,7 @@ type Config struct {
 	// Behaviour
 	Context bool // include surrounding characters in findings
 	Verbose bool // print progress and per-file metadata
+	Quiet   bool // suppress non-fatal stderr output (warnings, per-APK errors)
 	Version string // build version, injected at compile time
 }
 
@@ -224,7 +225,9 @@ func scanAPKPool(apkPaths []string, matcher *pattern.Matcher, cfg Config) ([]mod
 	for r := range results {
 		if r.err != nil {
 			// Per-APK error: warn and continue.
-			fmt.Fprintf(os.Stderr, "dexpose: warning: cannot scan %s: %v\n", r.apkPath, r.err)
+			if !cfg.Quiet {
+				fmt.Fprintf(os.Stderr, "dexpose: warning: cannot scan %s: %v\n", r.apkPath, r.err)
+			}
 			continue
 		}
 		all = append(all, r.findings...)

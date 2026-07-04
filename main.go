@@ -38,8 +38,15 @@ func run() int {
 	fs.StringVar(ignoreFile, "i", "", "Path to ignore file (shorthand)")
 
 	context := fs.Bool("context", false, "Include surrounding characters around each match")
+	fs.BoolVar(context, "c", false, "Include surrounding characters (shorthand)")
+
 	verbose := fs.Bool("verbose", false, "Print scan progress and per-file metadata")
+
 	showVersion := fs.Bool("version", false, "Print version information and exit")
+	fs.BoolVar(showVersion, "v", false, "Print version information (shorthand)")
+
+	quiet := fs.Bool("quiet", false, "Suppress non-fatal stderr output")
+	fs.BoolVar(quiet, "q", false, "Suppress non-fatal stderr output (shorthand)")
 
 	// Parse — ContinueOnError means we get the error back rather than os.Exit.
 	if err := fs.Parse(os.Args[1:]); err != nil {
@@ -94,6 +101,7 @@ func run() int {
 		IgnoreFile:   *ignoreFile,
 		Context:      *context,
 		Verbose:      *verbose,
+		Quiet:        *quiet,
 		Version:      version,
 	}
 
