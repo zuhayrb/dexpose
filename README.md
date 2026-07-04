@@ -1,4 +1,4 @@
-# dexpose
+# Dexpose
 
 ![Go Version](https://img.shields.io/badge/go-1.26%2B-blue)
 ![Release](https://img.shields.io/github/v/release/zuhayrb/dexpose)
@@ -6,6 +6,24 @@
 ![License](https://img.shields.io/github/license/zuhayrb/dexpose)
 
 A pure-Go CLI tool that scans APK files for leaked secrets and sensitive strings. No JVM, no jadx, no runtime dependencies — just a single static binary.
+
+```
+██████╗ ███████╗██╗  ██╗██████╗  ██████╗ ███████╗███████╗
+██╔══██╗██╔════╝╚██╗██╔╝██╔══██╗██╔═══██╗██╔════╝██╔════╝
+██║  ██║█████╗   ╚███╔╝ ██████╔╝██║   ██║███████╗█████╗  
+██║  ██║██╔══╝   ██╔██╗ ██╔═══╝ ██║   ██║╚════██║██╔══╝  
+██████╔╝███████╗██╔╝ ██╗██║     ╚██████╔╝███████║███████╗
+╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝      ╚═════╝ ╚══════╝╚══════╝ 
+
+ dexpose v0.1.5 — 57 rules loaded
+
+dexpose: scanning target.apk
+dexpose: classes.dex: 14203 strings extracted
+dexpose: found AKIAIOSFODNN7EXAMPLE in classes.dex [aws-access-key]
+dexpose: found AIzaSyBlL7MI-FuPJ3EueRrfB2ClDXFwkwoQrSg in AndroidManifest.xml [google-api-key]
+dexpose: target.apk: 2 finding(s)
+dexpose: scanned 1 APK(s), 2 finding(s)
+```
 
 ## Install
 
@@ -73,28 +91,6 @@ Exit code 1 when findings exist, 0 when clean:
 
 ```bash
 dexpose -f json -o results.json ./release.apk && echo "clean" || echo "secrets found"
-```
-
-### Verbose mode
-
-With `--verbose`, dexpose prints the logo, version, rule count, scan progress, DEX string counts, and each finding in real-time to stderr:
-
-```
-██████╗ ███████╗██╗  ██╗██████╗  ██████╗ ███████╗███████╗
-██╔══██╗██╔════╝╚██╗██╔╝██╔══██╗██╔═══██╗██╔════╝██╔════╝
-██║  ██║█████╗   ╚███╔╝ ██████╔╝██║   ██║███████╗█████╗  
-██║  ██║██╔══╝   ██╔██╗ ██╔═══╝ ██║   ██║╚════██║██╔══╝  
-██████╔╝███████╗██╔╝ ██╗██║     ╚██████╔╝███████║███████╗
-╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝      ╚═════╝ ╚══════╝╚══════╝ 
-
- dexpose v0.1.5 — 57 rules loaded
-
-dexpose: scanning target.apk
-dexpose: classes.dex: 14203 strings extracted
-dexpose: found AKIAIOSFODNN7EXAMPLE in classes.dex [aws-access-key]
-dexpose: found AIzaSyBlL7MI-FuPJ3EueRrfB2ClDXFwkwoQrSg in AndroidManifest.xml [google-api-key]
-dexpose: target.apk: 2 finding(s)
-dexpose: scanned 1 APK(s), 2 finding(s)
 ```
 
 ### Ignoring false positives
