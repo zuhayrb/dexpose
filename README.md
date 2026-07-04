@@ -17,11 +17,11 @@ Or download a pre-built binary from [Releases](https://github.com/zuhayrb/dexpos
 
 ```bash
 # Linux (amd64)
-curl -sL https://github.com/zuhayrb/dexpose/releases/latest/download/dexpose_0.1.2_linux_amd64.tar.gz \
+curl -sL https://github.com/zuhayrb/dexpose/releases/latest/download/dexpose_0.1.5_linux_amd64.tar.gz \
   | tar xz
 
 # macOS (arm64)
-curl -sL https://github.com/zuhayrb/dexpose/releases/latest/download/dexpose_0.1.2_darwin_arm64.tar.gz \
+curl -sL https://github.com/zuhayrb/dexpose/releases/latest/download/dexpose_0.1.5_darwin_arm64.tar.gz \
   | tar xz
 ```
 
@@ -87,7 +87,7 @@ With `--verbose`, dexpose prints the logo, version, rule count, scan progress, D
 ██████╔╝███████╗██╔╝ ██╗██║     ╚██████╔╝███████║███████╗
 ╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝      ╚═════╝ ╚══════╝╚══════╝ 
 
- dexpose v0.1.3 — 57 rules loaded
+ dexpose v0.1.5 — 57 rules loaded
 
 dexpose: scanning target.apk
 dexpose: classes.dex: 14203 strings extracted
