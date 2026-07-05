@@ -15,7 +15,7 @@ A pure-Go CLI tool that scans APK files for leaked secrets and sensitive strings
 ██████╔╝███████╗██╔╝ ██╗██║     ╚██████╔╝███████║███████╗
 ╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝      ╚═════╝ ╚══════╝╚══════╝ 
 
- dexpose v0.1.5 — 57 rules loaded
+ dexpose v0.3.0 — 57 rules loaded
 
 dexpose: scanning target.apk
 dexpose: classes.dex: 14203 strings extracted
@@ -35,11 +35,11 @@ Or download a pre-built binary from [Releases](https://github.com/zuhayrb/dexpos
 
 ```bash
 # Linux (amd64)
-curl -sL https://github.com/zuhayrb/dexpose/releases/latest/download/dexpose_0.1.5_linux_amd64.tar.gz \
+curl -sL https://github.com/zuhayrb/dexpose/releases/latest/download/dexpose_0.3.0_linux_amd64.tar.gz \
   | tar xz
 
 # macOS (arm64)
-curl -sL https://github.com/zuhayrb/dexpose/releases/latest/download/dexpose_0.1.5_darwin_arm64.tar.gz \
+curl -sL https://github.com/zuhayrb/dexpose/releases/latest/download/dexpose_0.3.0_darwin_arm64.tar.gz \
   | tar xz
 ```
 
@@ -59,7 +59,10 @@ dexpose --context --verbose target.apk
 dexpose -p my-rules.toml -i .dexposeIgnore target.apk
 
 # Print version
-dexpose -v
+dexpose --version
+
+# Enable verbose output
+dexpose -v target.apk
 ```
 
 ### Flags
@@ -71,9 +74,9 @@ dexpose -v
 | `--patterns` | `-p` | Path to custom rules.toml |
 | `--ignore` | `-i` | Path to ignore file |
 | `--context` | `-c` | Include surrounding characters around each match |
-| `--verbose` | | Print scan progress and per-file metadata |
+| `--verbose` | `-v` | Print scan progress and per-file metadata |
 | `--quiet` | `-q` | Suppress non-fatal stderr output |
-| `--version` | `-v` | Print version information and exit |
+| `--version` | | Print version information and exit |
 
 ### Output formats
 
@@ -128,7 +131,7 @@ Suppressed findings are excluded from both output and exit code.
 Within each APK, dexpose inspects:
 
 - **DEX files** — `classes.dex`, `classes2.dex`, etc. (individual strings extracted from the DEX string table)
-- **AndroidManifest.xml** — decoded from binary XML format
+- **AndroidManifest.xml** — decoded from binary XML format; resource ID references (e.g. `@0x7F010000`) are resolved to their string values via `resources.arsc` when available
 - **res/values/strings.xml** — plain XML scan
 - **assets/** — all files scanned as plaintext
 
