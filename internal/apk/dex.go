@@ -5,8 +5,9 @@ import (
 	"fmt"
 )
 
-// DEX magic number: "dex\n039\0"
-var dexMagic = []byte("dex\n039\x00")
+// DEX magic prefix: "dex\n" — the version suffix (e.g. "035\0", "039\0")
+// varies by API level so we only check the first 4 bytes.
+var dexMagicPrefix = []byte("dex\n")
 
 // ExtractStrings extracts all strings from the DEX string table.
 // It reads the string_ids section and string_data section from the
@@ -51,7 +52,7 @@ func validateDEXHeader(dex []byte) error {
 	if len(dex) < 0x70 {
 		return fmt.Errorf("apk: DEX file too short (%d bytes, minimum 112)", len(dex))
 	}
-	if !bytesEqual(dex[:8], dexMagic) {
+	if !bytesEqual(dex[:4], dexMagicPrefix) || dex[7] != 0 {
 		return fmt.Errorf("apk: invalid DEX magic number")
 	}
 	return nil

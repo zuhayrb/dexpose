@@ -41,9 +41,9 @@ func run() int {
 	fs.BoolVar(context, "c", false, "Include surrounding characters (shorthand)")
 
 	verbose := fs.Bool("verbose", false, "Print scan progress and per-file metadata")
+	fs.BoolVar(verbose, "v", false, "Print scan progress (shorthand)")
 
 	showVersion := fs.Bool("version", false, "Print version information and exit")
-	fs.BoolVar(showVersion, "v", false, "Print version information (shorthand)")
 
 	quiet := fs.Bool("quiet", false, "Suppress non-fatal stderr output")
 	fs.BoolVar(quiet, "q", false, "Suppress non-fatal stderr output (shorthand)")

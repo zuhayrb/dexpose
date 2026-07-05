@@ -419,3 +419,152 @@ func TestDecodeManifest_MissingManifest(t *testing.T) {
 		t.Fatal("DecodeManifest should error when AndroidManifest.xml is missing")
 	}
 }
+
+// --- ResourceTable ---
+
+func TestResourceTable_Present(t *testing.T) {
+	arsc, err := os.ReadFile("testdata/resources.arsc")
+	if err != nil {
+		t.Skipf("testdata/resources.arsc not available: %v", err)
+	}
+
+	dir := t.TempDir()
+	path := makeTestAPK(t, dir, "with-arsc.apk", map[string][]byte{
+		"resources.arsc": arsc,
+		"classes.dex":    []byte("dex1"),
+	})
+
+	a, _ := apk.Open(path)
+	defer a.Close()
+
+	table, err := a.ResourceTable()
+	if err != nil {
+		t.Fatalf("ResourceTable() returned error: %v", err)
+	}
+	if table == nil {
+		t.Fatal("ResourceTable() returned nil")
+	}
+}
+
+func TestResourceTable_Missing(t *testing.T) {
+	dir := t.TempDir()
+	path := makeTestAPK(t, dir, "no-arsc.apk", map[string][]byte{
+		"classes.dex": []byte("dex1"),
+	})
+
+	a, _ := apk.Open(path)
+	defer a.Close()
+
+	_, err := a.ResourceTable()
+	if err == nil {
+		t.Fatal("ResourceTable() should error when resources.arsc is missing")
+	}
+}
+
+func TestResourceTable_Corrupted(t *testing.T) {
+	dir := t.TempDir()
+	path := makeTestAPK(t, dir, "corrupt-arsc.apk", map[string][]byte{
+		"resources.arsc": []byte("this is not a valid resources.arsc"),
+		"classes.dex":    []byte("dex1"),
+	})
+
+	a, _ := apk.Open(path)
+	defer a.Close()
+
+	_, err := a.ResourceTable()
+	if err == nil {
+		t.Fatal("ResourceTable() should error on corrupted resources.arsc")
+	}
+}
+
+// --- DecodeManifest with resource resolution ---
+
+func TestDecodeManifest_WithResources_NoARSC(t *testing.T) {
+	// APK without resources.arsc — DecodeManifest falls back to nil resources.
+	axml, err := os.ReadFile("testdata/AndroidManifest.axml")
+	if err != nil {
+		t.Skipf("testdata not available: %v", err)
+	}
+
+	dir := t.TempDir()
+	path := makeTestAPK(t, dir, "no-arsc.apk", map[string][]byte{
+		"AndroidManifest.xml": axml,
+		"classes.dex":         []byte("dex1"),
+	})
+
+	a, _ := apk.Open(path)
+	defer a.Close()
+
+	decoded, err := a.DecodeManifest()
+	if err != nil {
+		t.Fatalf("DecodeManifest: %v", err)
+	}
+	if len(decoded) == 0 {
+		t.Fatal("DecodeManifest returned empty output")
+	}
+	if decoded[0] != '<' {
+		t.Errorf("decoded manifest should start with '<', got %q", decoded[0])
+	}
+}
+
+func TestDecodeManifest_WithResources_ARSC(t *testing.T) {
+	// APK with both AXML manifest and resources.arsc.
+	axml, err := os.ReadFile("testdata/AndroidManifest.axml")
+	if err != nil {
+		t.Skipf("testdata/AndroidManifest.axml not available: %v", err)
+	}
+	arsc, err := os.ReadFile("testdata/resources.arsc")
+	if err != nil {
+		t.Skipf("testdata/resources.arsc not available: %v", err)
+	}
+
+	dir := t.TempDir()
+	path := makeTestAPK(t, dir, "with-resources.apk", map[string][]byte{
+		"AndroidManifest.xml": axml,
+		"resources.arsc":      arsc,
+		"classes.dex":         []byte("dex1"),
+	})
+
+	a, _ := apk.Open(path)
+	defer a.Close()
+
+	decoded, err := a.DecodeManifest()
+	if err != nil {
+		t.Fatalf("DecodeManifest: %v", err)
+	}
+	if len(decoded) == 0 {
+		t.Fatal("DecodeManifest returned empty output")
+	}
+	if decoded[0] != '<' {
+		t.Errorf("decoded manifest should start with '<', got %q", decoded[0])
+	}
+}
+
+func TestDecodeManifest_WithResources_Fallback(t *testing.T) {
+	// Corrupted resources.arsc — DecodeManifest falls back gracefully.
+	axml, err := os.ReadFile("testdata/AndroidManifest.axml")
+	if err != nil {
+		t.Skipf("testdata not available: %v", err)
+	}
+
+	dir := t.TempDir()
+	path := makeTestAPK(t, dir, "corrupt-resources.apk", map[string][]byte{
+		"AndroidManifest.xml": axml,
+		"resources.arsc":      []byte("garbage"),
+		"classes.dex":         []byte("dex1"),
+	})
+
+	a, _ := apk.Open(path)
+	defer a.Close()
+
+	decoded, err := a.DecodeManifest()
+	if err != nil {
+		t.Fatalf("DecodeManifest should fall back on corrupted resources.arsc, got: %v", err)
+	}
+	if len(decoded) == 0 {
+		t.Fatal("DecodeManifest returned empty output")
+	}
+	if decoded[0] != '<' {
+		t.Errorf("decoded manifest should start with '<', got %q", decoded[0])
+	}
+}
