@@ -4,11 +4,13 @@
 package scan
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
 
@@ -291,14 +293,43 @@ func scanAPK(apkPath string, matcher *pattern.Matcher, cfg Config) ([]model.Find
 		findings = append(findings, scanContent(apkPath, "AndroidManifest.xml", string(manifest), matcher, cfg)...)
 	}
 
-	// Scan res/values/strings.xml.
-	stringsXML, err := a.StringsXML()
-	if err != nil {
+	// Scan res/values/strings.xml (present in debug APKs).
+	stringsXML, strErr := a.StringsXML()
+	if strErr != nil {
 		if cfg.Verbose {
-			fmt.Fprintf(os.Stderr, "dexpose: warning: %v\n", err)
+			fmt.Fprintf(os.Stderr, "dexpose: warning: %v\n", strErr)
 		}
 	} else {
 		findings = append(findings, scanContent(apkPath, "res/values/strings.xml", string(stringsXML), matcher, cfg)...)
+	}
+
+	// Scan compiled string resources from resources.arsc.
+	// Release APKs compile res/values/strings.xml into the binary resource table
+	// and drop the source file. This catches string values referenced from
+	// Java/Kotlin code via R.string.* that DEX scanning alone would miss.
+	// Skipped when strings.xml was already scanned to avoid duplicates.
+	resStrings, rsErr := a.ResourceStrings()
+	if rsErr != nil {
+		if !errors.Is(rsErr, os.ErrNotExist) && cfg.Verbose {
+			fmt.Fprintf(os.Stderr, "dexpose: warning: cannot extract resource strings: %v\n", rsErr)
+		}
+	} else if len(resStrings) > 0 && strErr != nil {
+		// Serialize as key=value lines for pattern scanning.
+		// Sort keys for deterministic output ordering.
+		keys := make([]string, 0, len(resStrings))
+		for k := range resStrings {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+
+		var buf strings.Builder
+		for _, k := range keys {
+			buf.WriteString(k)
+			buf.WriteByte('=')
+			buf.WriteString(resStrings[k])
+			buf.WriteByte('\n')
+		}
+		findings = append(findings, scanContent(apkPath, "resources.arsc", buf.String(), matcher, cfg)...)
 	}
 
 	// Scan assets.

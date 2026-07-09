@@ -477,6 +477,69 @@ func TestResourceTable_Corrupted(t *testing.T) {
 	}
 }
 
+// --- ResourceStrings ---
+
+func TestResourceStrings_Present(t *testing.T) {
+	arsc, err := os.ReadFile("testdata/resources_arsc_strings.arsc")
+	if err != nil {
+		t.Skipf("testdata/resources_arsc_strings.arsc not available: %v", err)
+	}
+
+	dir := t.TempDir()
+	path := makeTestAPK(t, dir, "with-strings.apk", map[string][]byte{
+		"resources.arsc": arsc,
+		"classes.dex":    []byte("dex1"),
+	})
+
+	a, _ := apk.Open(path)
+	defer a.Close()
+
+	strings, err := a.ResourceStrings()
+	if err != nil {
+		t.Fatalf("ResourceStrings() error: %v", err)
+	}
+	if len(strings) != 2 {
+		t.Fatalf("ResourceStrings() returned %d entries, want 2", len(strings))
+	}
+	if strings["aws_key"] != "AKIAIOSFODNN7EXAMPLE" {
+		t.Errorf("aws_key = %q, want %q", strings["aws_key"], "AKIAIOSFODNN7EXAMPLE")
+	}
+	if strings["label"] != "not_a_secret" {
+		t.Errorf("label = %q, want %q", strings["label"], "not_a_secret")
+	}
+}
+
+func TestResourceStrings_NoARSC(t *testing.T) {
+	dir := t.TempDir()
+	path := makeTestAPK(t, dir, "no-arsc.apk", map[string][]byte{
+		"classes.dex": []byte("dex1"),
+	})
+
+	a, _ := apk.Open(path)
+	defer a.Close()
+
+	_, err := a.ResourceStrings()
+	if err == nil {
+		t.Fatal("ResourceStrings() should error when resources.arsc is missing")
+	}
+}
+
+func TestResourceStrings_CorruptedARSC(t *testing.T) {
+	dir := t.TempDir()
+	path := makeTestAPK(t, dir, "corrupt-arsc.apk", map[string][]byte{
+		"resources.arsc": []byte("this is not a valid resources.arsc"),
+		"classes.dex":    []byte("dex1"),
+	})
+
+	a, _ := apk.Open(path)
+	defer a.Close()
+
+	_, err := a.ResourceStrings()
+	if err == nil {
+		t.Fatal("ResourceStrings() should error on corrupted resources.arsc")
+	}
+}
+
 // --- DecodeManifest with resource resolution ---
 
 func TestDecodeManifest_WithResources_NoARSC(t *testing.T) {

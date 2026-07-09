@@ -324,6 +324,78 @@ func TestRun_ContextExtraction(t *testing.T) {
 	}
 }
 
+func TestRun_ResourcesARSC_FindsSecrets(t *testing.T) {
+	dir := t.TempDir()
+	patterns, _ := os.ReadFile("../../patterns/rules.toml")
+	patternsPath := filepath.Join(dir, "rules.toml")
+	os.WriteFile(patternsPath, patterns, 0644)
+
+	arsc, err := os.ReadFile("../../internal/apk/testdata/resources_arsc_strings.arsc")
+	if err != nil {
+		t.Skipf("testdata not available: %v", err)
+	}
+
+	// APK with resources.arsc but NO strings.xml — simulates a release APK.
+	apkPath := makeTestAPK(t, dir, "release.apk", map[string][]byte{
+		"resources.arsc": arsc,
+		"classes.dex":    []byte("dex content"),
+	})
+
+	var buf bytes.Buffer
+	cfg := scan.Config{
+		Path:         apkPath,
+		Format:       "plain",
+		OutputDest:   &buf,
+		PatternsFile: patternsPath,
+	}
+
+	code := scan.Run(cfg)
+	if code != 1 {
+		t.Errorf("want exit code 1 (findings), got %d", code)
+	}
+	output := buf.String()
+	// The resource string "AKIAIOSFODNN7EXAMPLE" should match aws-access-key.
+	if !strings.Contains(output, "AKIAIOSFODNN7EXAMPLE") {
+		t.Errorf("output should contain AWS key from resources.arsc, got: %s", output)
+	}
+	if !strings.Contains(output, "resources.arsc") {
+		t.Errorf("output should reference resources.arsc as source, got: %s", output)
+	}
+}
+
+func TestRun_ResourcesARSC_SkippedWhenStringsXMLPresent(t *testing.T) {
+	dir := t.TempDir()
+	patterns, _ := os.ReadFile("../../patterns/rules.toml")
+	patternsPath := filepath.Join(dir, "rules.toml")
+	os.WriteFile(patternsPath, patterns, 0644)
+
+	arsc, err := os.ReadFile("../../internal/apk/testdata/resources_arsc_strings.arsc")
+	if err != nil {
+		t.Skipf("testdata not available: %v", err)
+	}
+
+	// APK with BOTH strings.xml and resources.arsc — resources.arsc should be skipped
+	// to avoid duplicates.
+	apkPath := makeTestAPK(t, dir, "debug.apk", map[string][]byte{
+		"resources.arsc":         arsc,
+		"res/values/strings.xml": []byte("<resources><string name=\"x\">clean</string></resources>"),
+		"classes.dex":            []byte("dex content"),
+	})
+
+	var buf bytes.Buffer
+	cfg := scan.Config{
+		Path:         apkPath,
+		Format:       "plain",
+		OutputDest:   &buf,
+		PatternsFile: patternsPath,
+	}
+
+	code := scan.Run(cfg)
+	if code != 0 {
+		t.Errorf("want exit code 0 (no findings), got %d", code)
+	}
+}
+
 func TestRun_MultipleAPKs_DirectoryMode(t *testing.T) {
 	dir := t.TempDir()
 	patterns, _ := os.ReadFile("../../patterns/rules.toml")

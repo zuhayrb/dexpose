@@ -15,7 +15,7 @@ A pure-Go CLI tool that scans APK files for leaked secrets and sensitive strings
 ██████╔╝███████╗██╔╝ ██╗██║     ╚██████╔╝███████║███████╗
 ╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝      ╚═════╝ ╚══════╝╚══════╝ 
 
- dexpose v0.3.0 — 57 rules loaded
+ dexpose v0.4.0 — 57 rules loaded
 
 dexpose: scanning target.apk
 dexpose: classes.dex: 14203 strings extracted
@@ -132,7 +132,8 @@ Within each APK, dexpose inspects:
 
 - **DEX files** — `classes.dex`, `classes2.dex`, etc. (individual strings extracted from the DEX string table)
 - **AndroidManifest.xml** — decoded from binary XML format; resource ID references (e.g. `@0x7F010000`) are resolved to their string values via `resources.arsc` when available
-- **res/values/strings.xml** — plain XML scan
+- **res/values/strings.xml** — plain XML scan (present in debug APKs)
+- **resources.arsc** — compiled binary resource table scanned for string-type entries (present in all APKs; is the primary source of string values in release APKs where `strings.xml` is stripped)
 - **assets/** — all files scanned as plaintext
 
 ## Patterns

@@ -160,6 +160,89 @@ func DecodeManifestBytesWithResources(raw []byte, resources *apkparser.ResourceT
 	return buf.Bytes(), nil
 }
 
+// ResourceStrings extracts all string-type resource entries from the APK's
+// binary resource table (resources.arsc). Returns a map of resource key name
+// to its string value for every entry of type "string" across all packages.
+//
+// This is the primary source of string values in release APKs: aapt2 compiles
+// res/values/strings.xml into the binary resource table and drops the source
+// file. Strings referenced from Java/Kotlin code via R.string.* that never
+// appear as literals in DEX bytecode are surfaced here.
+//
+// Returns os.ErrNotExist if the APK has no resources.arsc.
+// Returns an error if the resource table cannot be parsed.
+func (a *APK) ResourceStrings() (map[string]string, error) {
+	table, err := a.ResourceTable()
+	if err != nil {
+		return nil, err
+	}
+	return extractResourceStrings(table)
+}
+
+// extractResourceStrings walks all packages and types in the resource table
+// to collect string-type resource entries.
+func extractResourceStrings(table *apkparser.ResourceTable) (map[string]string, error) {
+	result := make(map[string]string)
+
+	// Iterate all possible package IDs. 0x00 is reserved; 0x01-0x7f cover
+	// shared libraries, the app package, and dynamic feature modules.
+	for pkgID := uint32(1); pkgID <= 0x7f; pkgID++ {
+		// Iterate all possible type IDs (single byte, 1-255).
+		// Type IDs can shift outside the normal aapt range due to R8
+		// resource shrinking or dynamic feature builds.
+		for typeID := uint8(1); typeID < 255; typeID++ {
+			// Probe up to 10 entry IDs to discover if this type is "string".
+			// Entry indices can be sparse (removed by resource shrinking),
+			// so we try multiple candidates before giving up.
+			isStringType := false
+			for entryID := uint16(0); entryID < 10; entryID++ {
+				resID := (pkgID << 24) | (uint32(typeID) << 16) | uint32(entryID)
+				entry, err := table.GetResourceEntry(resID)
+				if err != nil {
+					continue
+				}
+				if entry.ResourceType == "string" {
+					isStringType = true
+					break
+				}
+				// Found a non-string entry — this type is not "string".
+				break
+			}
+			if !isStringType {
+				continue
+			}
+
+			// Scan all 16-bit entry IDs for this string type.
+			for entryID := uint16(0); ; entryID++ {
+				resID := (pkgID << 24) | (uint32(typeID) << 16) | uint32(entryID)
+				entry, err := table.GetResourceEntry(resID)
+				if err != nil {
+					if entryID == 0xFFFF {
+						break
+					}
+					continue
+				}
+				if entry.ResourceType != "string" {
+					continue
+				}
+				val := entry.GetValue()
+				if val == nil {
+					continue
+				}
+				data, err := val.Data()
+				if err != nil || data == nil {
+					continue
+				}
+				if str, ok := data.(string); ok && str != "" {
+					result[entry.Key] = str
+				}
+			}
+		}
+	}
+
+	return result, nil
+}
+
 // StringsXML reads and returns the raw bytes of res/values/strings.xml.
 // The bytes are plain XML and can be scanned directly.
 func (a *APK) StringsXML() ([]byte, error) {
