@@ -368,6 +368,7 @@ func scanContent(apkPath, sourceName, content string, matcher *pattern.Matcher, 
 			Source:  sourceName,
 			Pattern: m.RuleID,
 			Match:   m.Value,
+			Premium: m.Premium,
 		}
 		if cfg.Context {
 			f.Context = extractContext(content, m.Value)
@@ -377,7 +378,11 @@ func scanContent(apkPath, sourceName, content string, matcher *pattern.Matcher, 
 			if len(matchPreview) > 80 {
 				matchPreview = matchPreview[:80] + "..."
 			}
-			fmt.Fprintf(os.Stderr, "dexpose: found %s in %s: %s\n", m.RuleID, sourceName, matchPreview)
+			tag := ""
+			if m.Premium {
+				tag = " [PREMIUM]"
+			}
+			fmt.Fprintf(os.Stderr, "dexpose: found %s in %s: %s%s\n", m.RuleID, sourceName, matchPreview, tag)
 		}
 		findings = append(findings, f)
 	}

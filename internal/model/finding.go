@@ -11,4 +11,5 @@ type Finding struct {
 	Pattern string // name of the matched pattern rule
 	Match   string // the matched string value
 	Context string // surrounding characters; populated only when Config.Context is true
+	Premium bool   // true when the matched rule is a premium-only pattern
 }

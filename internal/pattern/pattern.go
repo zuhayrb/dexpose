@@ -26,6 +26,11 @@ type Rule struct {
 
 	// Description is optional human-readable text. Not used at runtime.
 	Description string `toml:"description"`
+
+	// Premium marks this as a premium-only pattern. When true, findings
+	// are tagged as [PREMIUM] in output so users can see the pack's
+	// value at a glance. Defaults to false for the free bundled set.
+	Premium bool `toml:"premium"`
 }
 
 // rulesFile is the top-level structure of a rules.toml file.
@@ -48,6 +53,9 @@ type Match struct {
 	// For secrets scanning purposes this is the credential value itself.
 	// The caller (scan package) is responsible for extracting context around it.
 	Value string
+
+	// Premium is true when the matched rule is a premium pattern.
+	Premium bool
 }
 
 // Matcher holds the compiled rule set and performs matching.
@@ -107,8 +115,9 @@ func (m *Matcher) Match(s string) []Match {
 			}
 			seen[hit] = true
 			matches = append(matches, Match{
-				RuleID: cr.rule.ID,
-				Value:  hit,
+				RuleID:  cr.rule.ID,
+				Value:   hit,
+				Premium: cr.rule.Premium,
 			})
 		}
 	}

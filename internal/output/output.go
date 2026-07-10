@@ -24,7 +24,11 @@ func Write(findings []model.Finding, format string, w io.Writer) error {
 // writePlain writes one line per finding.
 func writePlain(findings []model.Finding, w io.Writer) error {
 	for _, f := range findings {
-		line := fmt.Sprintf("%s\t%s\t%s\t%s", f.APK, f.Source, f.Pattern, f.Match)
+		label := ""
+		if f.Premium {
+			label = "[PREMIUM]\t"
+		}
+		line := fmt.Sprintf("%s%s\t%s\t%s\t%s", label, f.APK, f.Source, f.Pattern, f.Match)
 		if f.Context != "" {
 			line += "\t" + f.Context
 		}
@@ -38,24 +42,26 @@ func writePlain(findings []model.Finding, w io.Writer) error {
 
 // writeJSON collects all findings and writes a JSON array.
 func writeJSON(findings []model.Finding, w io.Writer) error {
-	type jsonFinding struct {
-		APK     string `json:"apk"`
-		Source  string `json:"source"`
-		Pattern string `json:"pattern"`
-		Match   string `json:"match"`
-		Context string `json:"context,omitempty"`
-	}
+		type jsonFinding struct {
+			APK     string `json:"apk"`
+			Source  string `json:"source"`
+			Pattern string `json:"pattern"`
+			Match   string `json:"match"`
+			Context string `json:"context,omitempty"`
+			Premium bool   `json:"premium,omitempty"`
+		}
 
-	items := make([]jsonFinding, 0, len(findings))
-	for _, f := range findings {
-		items = append(items, jsonFinding{
-			APK:     f.APK,
-			Source:  f.Source,
-			Pattern: f.Pattern,
-			Match:   f.Match,
-			Context: f.Context,
-		})
-	}
+		items := make([]jsonFinding, 0, len(findings))
+		for _, f := range findings {
+			items = append(items, jsonFinding{
+				APK:     f.APK,
+				Source:  f.Source,
+				Pattern: f.Pattern,
+				Match:   f.Match,
+				Context: f.Context,
+				Premium: f.Premium,
+			})
+		}
 
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
