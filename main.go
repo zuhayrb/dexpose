@@ -40,8 +40,8 @@ func run() int {
 	context := fs.Bool("context", false, "Include surrounding characters around each match")
 	fs.BoolVar(context, "c", false, "Include surrounding characters (shorthand)")
 
-	verbose := fs.Bool("verbose", false, "Print scan progress and per-file metadata")
-	fs.BoolVar(verbose, "v", false, "Print scan progress (shorthand)")
+	verbose := fs.Bool("verbose", true, "Print scan progress and per-file metadata")
+	fs.BoolVar(verbose, "v", true, "Print scan progress (shorthand)")
 
 	colorMode := fs.String("color", "auto", "Color output: auto (default), always, or never")
 

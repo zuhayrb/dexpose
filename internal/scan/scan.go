@@ -63,7 +63,7 @@ func Run(cfg Config) int {
 		return 2
 	}
 
-	if cfg.Verbose {
+	if cfg.Verbose && !cfg.Quiet {
 		printBanner(cfg.Version, matcher.RuleCount())
 	}
 
@@ -121,7 +121,7 @@ func Run(cfg Config) int {
 	}
 
 	// Verbose summary.
-	if cfg.Verbose {
+	if cfg.Verbose && !cfg.Quiet {
 		fmt.Fprintf(os.Stderr, "dexpose: scanned %d APK(s), %d finding(s)", len(apkPaths), len(visible))
 		if suppressed := ignoreList.SuppressedCount(); suppressed > 0 {
 			fmt.Fprintf(os.Stderr, ", %d suppressed", suppressed)
@@ -247,7 +247,7 @@ func scanAPKPool(apkPaths []string, matcher *pattern.Matcher, cfg Config) ([]mod
 
 // scanAPK scans a single APK and returns all findings.
 func scanAPK(apkPath string, matcher *pattern.Matcher, cfg Config) ([]model.Finding, error) {
-	if cfg.Verbose {
+	if cfg.Verbose && !cfg.Quiet {
 		fmt.Fprintf(os.Stderr, "dexpose: scanning %s\n", apkPath)
 	}
 
@@ -263,7 +263,7 @@ func scanAPK(apkPath string, matcher *pattern.Matcher, cfg Config) ([]model.Find
 	dexFiles, err := a.DEXFiles()
 	if err != nil {
 		// No DEX files is unusual but not fatal — skip.
-		if cfg.Verbose {
+		if cfg.Verbose && !cfg.Quiet {
 			fmt.Fprintf(os.Stderr, "dexpose: warning: %v\n", err)
 		}
 	} else {
@@ -275,14 +275,14 @@ func scanAPK(apkPath string, matcher *pattern.Matcher, cfg Config) ([]model.Find
 			dexStrings, err := apk.ExtractStrings(dex)
 			if err != nil {
 				// Fallback: scan raw binary if DEX extraction fails.
-				if cfg.Verbose {
+				if cfg.Verbose && !cfg.Quiet {
 					fmt.Fprintf(os.Stderr, "dexpose: warning: %s: cannot extract DEX strings (%v), scanning raw binary\n", sourceName, err)
 				}
 				findings = append(findings, scanContent(apkPath, sourceName, string(dex), matcher, cfg)...)
 				printProgress(cfg, sourceName)
 				continue
 			}
-			if cfg.Verbose {
+			if cfg.Verbose && !cfg.Quiet {
 				fmt.Fprintf(os.Stderr, "dexpose: %s: %d strings extracted\n", sourceName, len(dexStrings))
 			}
 			for _, s := range dexStrings {
@@ -295,7 +295,7 @@ func scanAPK(apkPath string, matcher *pattern.Matcher, cfg Config) ([]model.Find
 	// Decode and scan AndroidManifest.xml.
 	manifest, err := a.DecodeManifest()
 	if err != nil {
-		if cfg.Verbose {
+		if cfg.Verbose && !cfg.Quiet {
 			fmt.Fprintf(os.Stderr, "dexpose: warning: cannot decode AndroidManifest.xml: %v\n", err)
 		}
 	} else {
@@ -306,7 +306,7 @@ func scanAPK(apkPath string, matcher *pattern.Matcher, cfg Config) ([]model.Find
 	// Scan res/values/strings.xml (present in debug APKs).
 	stringsXML, strErr := a.StringsXML()
 	if strErr != nil {
-		if cfg.Verbose {
+		if cfg.Verbose && !cfg.Quiet {
 			fmt.Fprintf(os.Stderr, "dexpose: warning: %v\n", strErr)
 		}
 	} else {
@@ -347,7 +347,7 @@ func scanAPK(apkPath string, matcher *pattern.Matcher, cfg Config) ([]model.Find
 	// Scan assets.
 	assets, err := a.Assets()
 	if err != nil {
-		if cfg.Verbose {
+		if cfg.Verbose && !cfg.Quiet {
 			fmt.Fprintf(os.Stderr, "dexpose: warning: %v\n", err)
 		}
 	} else {
@@ -359,7 +359,7 @@ func scanAPK(apkPath string, matcher *pattern.Matcher, cfg Config) ([]model.Find
 		}
 	}
 
-	if cfg.Verbose {
+	if cfg.Verbose && !cfg.Quiet {
 		fmt.Fprintf(os.Stderr, "dexpose: %s: %d finding(s)\n", apkPath, len(findings))
 	}
 
@@ -395,7 +395,7 @@ func scanContent(apkPath, sourceName, content string, matcher *pattern.Matcher, 
 		if cfg.Context {
 			f.Context = extractContext(content, m.Value)
 		}
-		if cfg.Verbose {
+		if cfg.Verbose && !cfg.Quiet {
 			matchPreview := m.Value
 			if len(matchPreview) > 80 {
 				matchPreview = matchPreview[:80] + "..."

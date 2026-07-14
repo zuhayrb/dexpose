@@ -55,17 +55,17 @@ dexpose -f json -o results.json ./apks/
 # Scan with plain (tab-separated) output for piping
 dexpose -f plain target.apk
 
-# Show match context and real-time scan details
-dexpose --context --verbose target.apk
+# Show match context with real-time scan details
+dexpose --context target.apk
+
+# Suppress banner and progress output (quiet mode for CI)
+dexpose -q target.apk
 
 # Custom patterns + ignore file
 dexpose -p my-rules.toml -i .dexposeIgnore target.apk
 
 # Print version
 dexpose --version
-
-# Enable verbose output
-dexpose -v target.apk
 ```
 
 ### Flags
@@ -77,9 +77,9 @@ dexpose -v target.apk
 | `--patterns` | `-p` | Path to custom rules.toml |
 | `--ignore` | `-i` | Path to ignore file |
 | `--context` | `-c` | Include surrounding characters around each match |
-| `--verbose` | `-v` | Print scan progress and per-file metadata |
+| `--verbose` | `-v` | Print scan progress and per-file metadata (default: on) |
 | `--color` | | Color mode: `auto` (default), `always`, or `never` |
-| `--quiet` | `-q` | Suppress non-fatal stderr output |
+| `--quiet` | `-q` | Suppress non-fatal stderr output (use for CI) |
 | `--version` | | Print version information and exit |
 
 ### Output formats
@@ -122,11 +122,14 @@ dexpose -f json target.apk | jq '.[].pattern'
 
 ### CI usage
 
-Exit code 1 when findings exist, 0 when clean:
+By default dexpose shows a banner, scan progress, and per-file details. For CI
+pipelines, pass `--quiet` (`-q`) to suppress everything but findings:
 
 ```bash
-dexpose -f json -o results.json ./release.apk && echo "clean" || echo "secrets found"
+dexpose -f json -o results.json -q ./release.apk && echo "clean" || echo "secrets found"
 ```
+
+Exit code 1 when findings exist, 0 when clean.
 
 ### Ignoring false positives
 
