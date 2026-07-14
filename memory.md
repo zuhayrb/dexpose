@@ -489,6 +489,14 @@ verbose summary. CI usage: `dexpose -f plain -q app.apk`.
   Archive `name_template` drops `{{ .Version }}` so release URLs are
   version-agnostic (`dexpose_linux_amd64.tar.gz`).
 
+### Progress lines now show in all formats
+
+`printProgress()` previously gated per-file progress on `cfg.Format == "table"`,
+so progress only appeared in table format. Since progress lines go to stderr
+(not stdout), they don't interfere with piping. Removed the format gate —
+progress now shows in `-f table`, `-f plain`, and `-f json`. Only `-q`
+suppresses them. (`scan.go:369-373`)
+
 ---
 
 ## v0.4.0 Changes (2026-07-09)
