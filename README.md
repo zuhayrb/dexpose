@@ -78,6 +78,7 @@ dexpose -v target.apk
 | `--ignore` | `-i` | Path to ignore file |
 | `--context` | `-c` | Include surrounding characters around each match |
 | `--verbose` | `-v` | Print scan progress and per-file metadata |
+| `--color` | | Color mode: `auto` (default), `always`, or `never` |
 | `--quiet` | `-q` | Suppress non-fatal stderr output |
 | `--version` | | Print version information and exit |
 
@@ -93,7 +94,10 @@ HIGH      jwt-token          assets/config.json  eyJhbGciOiJIUzI1NiJ9...
 ```
 
 Colors are automatically enabled when output goes to a terminal and
-disabled when piped. Use `-f plain` for machine-parseable output.
+disabled when piped. Use `--color=always` to force colors on (e.g. in
+a terminal that doesn't report itself as a TTY), or `--color=never`
+to suppress them. The `NO_COLOR` environment variable also disables
+colors. Use `-f plain` for machine-parseable output.
 
 **Plain** — tab-separated lines (pipe-friendly):
 

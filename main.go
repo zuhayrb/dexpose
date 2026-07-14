@@ -43,6 +43,8 @@ func run() int {
 	verbose := fs.Bool("verbose", false, "Print scan progress and per-file metadata")
 	fs.BoolVar(verbose, "v", false, "Print scan progress (shorthand)")
 
+	colorMode := fs.String("color", "auto", "Color output: auto (default), always, or never")
+
 	showVersion := fs.Bool("version", false, "Print version information and exit")
 
 	quiet := fs.Bool("quiet", false, "Suppress non-fatal stderr output")
@@ -75,6 +77,13 @@ func run() int {
 		return 2
 	}
 
+	// Validate --color.
+	validColorModes := map[string]bool{"auto": true, "always": true, "never": true}
+	if !validColorModes[*colorMode] {
+		fmt.Fprintf(os.Stderr, "dexpose: unknown color mode %q; accepted values are auto, always, and never\n", *colorMode)
+		return 2
+	}
+
 	// Verify the input path exists and is readable before doing anything else.
 	if _, err := os.Stat(inputPath); err != nil {
 		fmt.Fprintf(os.Stderr, "dexpose: %v\n", err)
@@ -94,8 +103,21 @@ func run() int {
 		outputDest = f
 	}
 
-	// Detect TTY for color output (only relevant for table format).
-	isTTY := isTerminal(outputDest)
+	// Determine whether to emit ANSI colors in table format.
+	// Resolution order: --color flag > NO_COLOR env var > auto-detect.
+	var isTTY bool
+	switch *colorMode {
+	case "always":
+		isTTY = true
+	case "never":
+		isTTY = false
+	default: // "auto"
+		if os.Getenv("NO_COLOR") != "" {
+			isTTY = false
+		} else {
+			isTTY = isTerminal(outputDest)
+		}
+	}
 
 	cfg := scan.Config{
 		Path:         inputPath,
