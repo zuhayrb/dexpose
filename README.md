@@ -35,12 +35,12 @@ Or download a pre-built binary from [Releases](https://github.com/zuhayrb/dexpos
 
 ```bash
 # Linux (amd64)
-curl -sL https://github.com/zuhayrb/dexpose/releases/latest/download/dexpose_linux_amd64.tar.gz \
-  | tar xz
+curl -sL $(curl -s https://api.github.com/repos/zuhayrb/dexpose/releases/latest \
+  | grep -o 'https://[^"]*_linux_amd64[^"]*') | tar xz
 
 # macOS (arm64)
-curl -sL https://github.com/zuhayrb/dexpose/releases/latest/download/dexpose_darwin_arm64.tar.gz \
-  | tar xz
+curl -sL $(curl -s https://api.github.com/repos/zuhayrb/dexpose/releases/latest \
+  | grep -o 'https://[^"]*_darwin_arm64[^"]*') | tar xz
 ```
 
 ## Usage
