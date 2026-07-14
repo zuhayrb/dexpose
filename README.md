@@ -52,6 +52,9 @@ dexpose target.apk
 # Scan a directory of APKs, output as JSON
 dexpose -f json -o results.json ./apks/
 
+# Scan with plain (tab-separated) output for piping
+dexpose -f plain target.apk
+
 # Show match context and real-time scan details
 dexpose --context --verbose target.apk
 
@@ -69,7 +72,7 @@ dexpose -v target.apk
 
 | Flag | Shorthand | Description |
 |------|-----------|-------------|
-| `--format` | `-f` | Output format: `plain` (default) or `json` |
+| `--format` | `-f` | Output format: `table` (default), `plain`, or `json` |
 | `--output` | `-o` | Write results to file instead of stdout |
 | `--patterns` | `-p` | Path to custom rules.toml |
 | `--ignore` | `-i` | Path to ignore file |
@@ -80,12 +83,24 @@ dexpose -v target.apk
 
 ### Output formats
 
-**Plain** (default) — tab-separated lines:
+**Table** (default) — styled table with colored severity indicators:
+
+```
+SEVERITY  TYPE               LOCATION            MATCH
+HIGH      aws-access-key     classes.dex         AKIAIOSFODNN7EXAMPLE
+HIGH      google-api-key     AndroidManifest.xml AIzaSyBlL7MI-FuPJ3EueRrfB2ClDXFwkwoQrSg
+HIGH      jwt-token          assets/config.json  eyJhbGciOiJIUzI1NiJ9...
+```
+
+Colors are automatically enabled when output goes to a terminal and
+disabled when piped. Use `-f plain` for machine-parseable output.
+
+**Plain** — tab-separated lines (pipe-friendly):
 
 ```
 target.apk  classes.dex              aws-access-key    AKIAIOSFODNN7EXAMPLE
 target.apk  AndroidManifest.xml      google-api-key    AIzaSyBlL7MI-FuPJ3EueRrfB2ClDXFwkwoQrSg
-target.apk  assets/config.json       jwt-token         eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U
+target.apk  assets/config.json       jwt-token         eyJhbGciOiJIUzI1NiJ9...
 ```
 
 **JSON** — structured array, pipeable into jq:

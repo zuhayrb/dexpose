@@ -6,6 +6,8 @@ import (
 	"io"
 	"os"
 
+	"golang.org/x/term"
+
 	"github.com/zuhayrb/dexpose/internal/scan"
 )
 
@@ -25,8 +27,8 @@ func run() int {
 	fs.SetOutput(os.Stderr)
 
 	// Flags — kept in sync with PRD §CLI Interface.
-	format := fs.String("format", "plain", "Output format: plain (default) or json")
-	fs.StringVar(format, "f", "plain", "Output format (shorthand)")
+	format := fs.String("format", "table", "Output format: table (default), plain, or json")
+	fs.StringVar(format, "f", "table", "Output format (shorthand)")
 
 	outputPath := fs.String("output", "", "Write results to file instead of stdout")
 	fs.StringVar(outputPath, "o", "", "Write results to file (shorthand)")
@@ -69,8 +71,9 @@ func run() int {
 	inputPath := args[0]
 
 	// Validate --format.
-	if *format != "plain" && *format != "json" {
-		fmt.Fprintf(os.Stderr, "dexpose: unknown format %q; accepted values are plain and json\n", *format)
+	validFormats := map[string]bool{"table": true, "plain": true, "json": true}
+	if !validFormats[*format] {
+		fmt.Fprintf(os.Stderr, "dexpose: unknown format %q; accepted values are table, plain, and json\n", *format)
 		return 2
 	}
 
@@ -93,6 +96,9 @@ func run() int {
 		outputDest = f
 	}
 
+	// Detect TTY for color output (only relevant for table format).
+	isTTY := term.IsTerminal(int(os.Stdout.Fd()))
+
 	cfg := scan.Config{
 		Path:         inputPath,
 		Format:       *format,
@@ -103,6 +109,7 @@ func run() int {
 		Verbose:      *verbose,
 		Quiet:        *quiet,
 		Version:      version,
+		IsTTY:        isTTY,
 	}
 
 	code := scan.Run(cfg)

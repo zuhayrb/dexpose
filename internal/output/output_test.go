@@ -15,7 +15,7 @@ func TestWritePlain_SingleFinding(t *testing.T) {
 		{APK: "test.apk", Source: "classes.dex", Pattern: "aws-access-key", Match: "AKIA123"},
 	}
 
-	err := output.Write(findings, "plain", &buf)
+	err := output.Write(findings, "plain", &buf, false)
 	if err != nil {
 		t.Fatalf("Write: %v", err)
 	}
@@ -32,7 +32,7 @@ func TestWritePlain_WithContext(t *testing.T) {
 		{APK: "test.apk", Source: "classes.dex", Pattern: "aws-access-key", Match: "AKIA123", Context: "...key=AKIA123..."},
 	}
 
-	err := output.Write(findings, "plain", &buf)
+	err := output.Write(findings, "plain", &buf, false)
 	if err != nil {
 		t.Fatalf("Write: %v", err)
 	}
@@ -51,7 +51,7 @@ func TestWritePlain_MultipleFindings(t *testing.T) {
 		{APK: "a.apk", Source: "assets/config.js", Pattern: "rule-2", Match: "val2"},
 	}
 
-	err := output.Write(findings, "plain", &buf)
+	err := output.Write(findings, "plain", &buf, false)
 	if err != nil {
 		t.Fatalf("Write: %v", err)
 	}
@@ -64,7 +64,7 @@ func TestWritePlain_MultipleFindings(t *testing.T) {
 
 func TestWritePlain_EmptyFindings(t *testing.T) {
 	var buf bytes.Buffer
-	err := output.Write(nil, "plain", &buf)
+	err := output.Write(nil, "plain", &buf, false)
 	if err != nil {
 		t.Fatalf("Write: %v", err)
 	}
@@ -79,7 +79,7 @@ func TestWriteJSON_SingleFinding(t *testing.T) {
 		{APK: "test.apk", Source: "classes.dex", Pattern: "aws-access-key", Match: "AKIA123"},
 	}
 
-	err := output.Write(findings, "json", &buf)
+	err := output.Write(findings, "json", &buf, false)
 	if err != nil {
 		t.Fatalf("Write: %v", err)
 	}
@@ -105,7 +105,7 @@ func TestWriteJSON_WithContext(t *testing.T) {
 		{APK: "test.apk", Source: "classes.dex", Pattern: "rule", Match: "val", Context: "surrounding"},
 	}
 
-	err := output.Write(findings, "json", &buf)
+	err := output.Write(findings, "json", &buf, false)
 	if err != nil {
 		t.Fatalf("Write: %v", err)
 	}
@@ -123,7 +123,7 @@ func TestWriteJSON_EmptyContextOmitted(t *testing.T) {
 		{APK: "test.apk", Source: "classes.dex", Pattern: "rule", Match: "val"},
 	}
 
-	err := output.Write(findings, "json", &buf)
+	err := output.Write(findings, "json", &buf, false)
 	if err != nil {
 		t.Fatalf("Write: %v", err)
 	}
@@ -138,7 +138,7 @@ func TestWriteJSON_EmptyContextOmitted(t *testing.T) {
 
 func TestWriteJSON_EmptyFindings(t *testing.T) {
 	var buf bytes.Buffer
-	err := output.Write(nil, "json", &buf)
+	err := output.Write(nil, "json", &buf, false)
 	if err != nil {
 		t.Fatalf("Write: %v", err)
 	}
@@ -159,7 +159,7 @@ func TestWriteJSON_MultipleFindings(t *testing.T) {
 		{APK: "b.apk", Source: "assets/x.js", Pattern: "r2", Match: "v2"},
 	}
 
-	err := output.Write(findings, "json", &buf)
+	err := output.Write(findings, "json", &buf, false)
 	if err != nil {
 		t.Fatalf("Write: %v", err)
 	}
@@ -178,7 +178,7 @@ func TestWrite_DefaultFormatIsPlain(t *testing.T) {
 	}
 
 	// "unknown" format should fall through to plain.
-	err := output.Write(findings, "unknown", &buf)
+	err := output.Write(findings, "unknown", &buf, false)
 	if err != nil {
 		t.Fatalf("Write: %v", err)
 	}
@@ -187,4 +187,102 @@ func TestWrite_DefaultFormatIsPlain(t *testing.T) {
 	if buf.Bytes()[0] == '{' {
 		t.Error("unknown format should default to plain, not JSON")
 	}
+}
+
+func TestWriteTable_SingleFinding(t *testing.T) {
+	var buf bytes.Buffer
+	findings := []model.Finding{
+		{APK: "test.apk", Source: "classes.dex", Pattern: "aws-access-key", Match: "AKIA123"},
+	}
+
+	err := output.Write(findings, "table", &buf, false)
+	if err != nil {
+		t.Fatalf("Write: %v", err)
+	}
+
+	got := buf.String()
+	// Check for header
+	if !contains(got, "SEVERITY") || !contains(got, "TYPE") || !contains(got, "MATCH") {
+		t.Errorf("missing header: %q", got)
+	}
+	// Check for severity
+	if !contains(got, "HIGH") {
+		t.Errorf("missing HIGH severity: %q", got)
+	}
+	// Check for finding
+	if !contains(got, "aws-access-key") || !contains(got, "AKIA123") {
+		t.Errorf("missing finding data: %q", got)
+	}
+}
+
+func TestWriteTable_WithSeverityMapping(t *testing.T) {
+	var buf bytes.Buffer
+	findings := []model.Finding{
+		{APK: "test.apk", Source: "classes.dex", Pattern: "aws-access-key", Match: "AKIA123"}, // HIGH
+		{APK: "test.apk", Source: "assets/x.js", Pattern: "slack-webhook-url", Match: "https://..."}, // MEDIUM
+		{APK: "test.apk", Source: "classes.dex", Pattern: "generic-api-key", Match: "abc123"}, // LOW
+	}
+
+	err := output.Write(findings, "table", &buf, false)
+	if err != nil {
+		t.Fatalf("Write: %v", err)
+	}
+
+	got := buf.String()
+	// Check severity mapping
+	if !contains(got, "HIGH") {
+		t.Errorf("missing HIGH: %q", got)
+	}
+	if !contains(got, "MEDIUM") {
+		t.Errorf("missing MEDIUM: %q", got)
+	}
+	if !contains(got, "LOW") {
+		t.Errorf("missing LOW: %q", got)
+	}
+}
+
+func TestWriteTable_EmptyFindings(t *testing.T) {
+	var buf bytes.Buffer
+	err := output.Write(nil, "table", &buf, false)
+	if err != nil {
+		t.Fatalf("Write: %v", err)
+	}
+
+	got := buf.String()
+	// Should still print header
+	if !contains(got, "SEVERITY") || !contains(got, "TYPE") || !contains(got, "MATCH") {
+		t.Errorf("missing header on empty: %q", got)
+	}
+}
+
+func TestSeverityFromPattern(t *testing.T) {
+	tests := []struct {
+		patternID string
+		expected  string
+	}{
+		{"aws-access-key", "HIGH"},
+		{"stripe-secret-key", "HIGH"},
+		{"slack-webhook-url", "MEDIUM"},
+		{"generic-api-key", "LOW"},
+		{"unknown-pattern", "MEDIUM"}, // default
+	}
+	for _, tc := range tests {
+		got := output.SeverityFromPattern(tc.patternID)
+		if got != tc.expected {
+			t.Errorf("SeverityFromPattern(%q) = %q, want %q", tc.patternID, got, tc.expected)
+		}
+	}
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(s) > len(substr) && findSubstring(s, substr))
+}
+
+func findSubstring(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }

@@ -32,8 +32,9 @@ type Config struct {
 	Path string // single APK file or directory to walk
 
 	// Output
-	Format     string    // "plain" or "json"
+	Format     string    // "table", "plain", or "json"
 	OutputDest io.Writer // resolved writer (stdout or opened file)
+	IsTTY      bool      // whether output destination is a terminal (for colors)
 
 	// Patterns
 	PatternsFile string // path to custom rules.toml; empty means use bundled set
@@ -108,9 +109,15 @@ func Run(cfg Config) int {
 	}
 
 	// Write output.
-	if err := output.Write(visible, cfg.Format, cfg.OutputDest); err != nil {
+	if err := output.Write(visible, cfg.Format, cfg.OutputDest, cfg.IsTTY); err != nil {
 		fmt.Fprintf(os.Stderr, "dexpose: %v\n", err)
 		return 2
+	}
+
+	// Print scan summary for table format (non-verbose, unless quiet).
+	if cfg.Format == "table" && !cfg.Quiet {
+		fmt.Fprintf(os.Stderr, "\n%s Scan completed successfully\n", output.ShieldIcon(cfg.IsTTY))
+		fmt.Fprintf(os.Stderr, "  %d secret(s) detected\n\n", len(visible))
 	}
 
 	// Verbose summary.
@@ -272,6 +279,7 @@ func scanAPK(apkPath string, matcher *pattern.Matcher, cfg Config) ([]model.Find
 					fmt.Fprintf(os.Stderr, "dexpose: warning: %s: cannot extract DEX strings (%v), scanning raw binary\n", sourceName, err)
 				}
 				findings = append(findings, scanContent(apkPath, sourceName, string(dex), matcher, cfg)...)
+				printProgress(cfg, sourceName)
 				continue
 			}
 			if cfg.Verbose {
@@ -280,6 +288,7 @@ func scanAPK(apkPath string, matcher *pattern.Matcher, cfg Config) ([]model.Find
 			for _, s := range dexStrings {
 				findings = append(findings, scanContent(apkPath, sourceName, s, matcher, cfg)...)
 			}
+			printProgress(cfg, sourceName)
 		}
 	}
 
@@ -291,6 +300,7 @@ func scanAPK(apkPath string, matcher *pattern.Matcher, cfg Config) ([]model.Find
 		}
 	} else {
 		findings = append(findings, scanContent(apkPath, "AndroidManifest.xml", string(manifest), matcher, cfg)...)
+		printProgress(cfg, "AndroidManifest.xml")
 	}
 
 	// Scan res/values/strings.xml (present in debug APKs).
@@ -301,6 +311,7 @@ func scanAPK(apkPath string, matcher *pattern.Matcher, cfg Config) ([]model.Find
 		}
 	} else {
 		findings = append(findings, scanContent(apkPath, "res/values/strings.xml", string(stringsXML), matcher, cfg)...)
+		printProgress(cfg, "res/values/strings.xml")
 	}
 
 	// Scan compiled string resources from resources.arsc.
@@ -330,6 +341,7 @@ func scanAPK(apkPath string, matcher *pattern.Matcher, cfg Config) ([]model.Find
 			buf.WriteByte('\n')
 		}
 		findings = append(findings, scanContent(apkPath, "resources.arsc", buf.String(), matcher, cfg)...)
+		printProgress(cfg, "resources.arsc")
 	}
 
 	// Scan assets.
@@ -342,6 +354,9 @@ func scanAPK(apkPath string, matcher *pattern.Matcher, cfg Config) ([]model.Find
 		for assetPath, data := range assets {
 			findings = append(findings, scanContent(apkPath, assetPath, string(data), matcher, cfg)...)
 		}
+		if len(assets) > 0 {
+			printProgress(cfg, "assets/")
+		}
 	}
 
 	if cfg.Verbose {
@@ -349,6 +364,13 @@ func scanAPK(apkPath string, matcher *pattern.Matcher, cfg Config) ([]model.Find
 	}
 
 	return findings, nil
+}
+
+// printProgress prints a per-file scan progress line for table format.
+func printProgress(cfg Config, sourceName string) {
+	if cfg.Format == "table" && !cfg.Quiet {
+		fmt.Fprintf(os.Stderr, "%s %-*s %s\n", output.Checkmark(cfg.IsTTY), 32, sourceName, output.ScannedLabel(cfg.IsTTY))
+	}
 }
 
 // scanContent runs all pattern rules against a content string and returns
