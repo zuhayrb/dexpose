@@ -368,7 +368,7 @@ func scanAPK(apkPath string, matcher *pattern.Matcher, cfg Config) ([]model.Find
 
 // printProgress prints a per-file scan progress line for table format.
 func printProgress(cfg Config, sourceName string) {
-	if cfg.Format == "table" && !cfg.Quiet {
+	if !cfg.Quiet {
 		fmt.Fprintf(os.Stderr, "%s %-*s %s\n", output.Checkmark(cfg.IsTTY), 32, sourceName, output.ScannedLabel(cfg.IsTTY))
 	}
 }
