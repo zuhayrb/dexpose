@@ -35,11 +35,11 @@ Or download a pre-built binary from [Releases](https://github.com/zuhayrb/dexpos
 
 ```bash
 # Linux (amd64)
-curl -sL https://github.com/zuhayrb/dexpose/releases/latest/download/dexpose_0.3.0_linux_amd64.tar.gz \
+curl -sL https://github.com/zuhayrb/dexpose/releases/latest/download/dexpose_linux_amd64.tar.gz \
   | tar xz
 
 # macOS (arm64)
-curl -sL https://github.com/zuhayrb/dexpose/releases/latest/download/dexpose_0.3.0_darwin_arm64.tar.gz \
+curl -sL https://github.com/zuhayrb/dexpose/releases/latest/download/dexpose_darwin_arm64.tar.gz \
   | tar xz
 ```
 
