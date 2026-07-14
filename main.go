@@ -6,8 +6,6 @@ import (
 	"io"
 	"os"
 
-	"golang.org/x/term"
-
 	"github.com/zuhayrb/dexpose/internal/scan"
 )
 
@@ -97,7 +95,7 @@ func run() int {
 	}
 
 	// Detect TTY for color output (only relevant for table format).
-	isTTY := term.IsTerminal(int(os.Stdout.Fd()))
+	isTTY := isTerminal(outputDest)
 
 	cfg := scan.Config{
 		Path:         inputPath,
@@ -128,4 +126,13 @@ func run() int {
 	}
 
 	return code
+}
+
+// isTerminal reports whether w is a character device (i.e., a terminal).
+func isTerminal(w io.Writer) bool {
+	if f, ok := w.(*os.File); ok {
+		fi, err := f.Stat()
+		return err == nil && fi.Mode()&os.ModeCharDevice != 0
+	}
+	return false
 }
